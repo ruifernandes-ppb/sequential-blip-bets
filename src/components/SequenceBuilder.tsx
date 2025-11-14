@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Plus, Trash2, Sparkles, CheckCircle, AlertCircle, GripVertical } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Sparkles, CheckCircle, AlertCircle, GripVertical, Send, MessageCircle } from 'lucide-react';
 import { Match, SequenceOutcome } from '../App';
 import { Button } from './ui/button';
 
@@ -69,6 +69,9 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
   const [selectedOutcomes, setSelectedOutcomes] = useState<SequenceOutcome[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [chatInput, setChatInput] = useState('');
+  const [searchResults, setSearchResults] = useState<OutcomeTemplate[]>([]);
+  const [showChatResults, setShowChatResults] = useState(false);
 
   const addOutcome = (template: OutcomeTemplate) => {
     const processedDescription = template.description
@@ -133,6 +136,78 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
 
   const handleDragEnd = () => {
     setDraggedIndex(null);
+  };
+
+  const handleChatSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+
+    // Natural language matching algorithm
+    const searchLower = chatInput.toLowerCase();
+    const keywords = searchLower.split(' ').filter(word => word.length > 2);
+    
+    // Score each template based on relevance
+    const scoredTemplates = OUTCOME_TEMPLATES.map(template => {
+      let score = 0;
+      const descLower = template.description.toLowerCase();
+      const categoryLower = template.category.toLowerCase();
+      
+      // Direct phrase match (highest priority)
+      if (descLower.includes(searchLower)) {
+        score += 100;
+      }
+      
+      // Keyword matching
+      keywords.forEach(keyword => {
+        if (descLower.includes(keyword)) score += 20;
+        if (categoryLower.includes(keyword)) score += 15;
+        if (template.id.includes(keyword)) score += 10;
+      });
+      
+      // Player name matching
+      if (searchLower.includes('alcaraz') || searchLower.includes(match.player1.toLowerCase())) {
+        if (template.id.includes('player1')) score += 30;
+      }
+      if (searchLower.includes('sinner') || searchLower.includes(match.player2.toLowerCase())) {
+        if (template.id.includes('player2')) score += 30;
+      }
+      
+      // Specific term matching
+      const termMatches: Record<string, string[]> = {
+        'ace': ['ace'],
+        'double fault': ['double-fault', 'fault'],
+        'break': ['break', 'breaks'],
+        'hold': ['hold', 'holds'],
+        'deuce': ['deuce'],
+        'love': ['love'],
+        'rally': ['rally'],
+        'net': ['net'],
+        'winner': ['winner'],
+        'serve': ['serve', 'holds', 'breaks'],
+        'game': ['game', 'wins'],
+        'point': ['point', 'break-point']
+      };
+      
+      Object.entries(termMatches).forEach(([term, ids]) => {
+        if (searchLower.includes(term)) {
+          ids.forEach(id => {
+            if (template.id.includes(id)) score += 25;
+          });
+        }
+      });
+      
+      return { template, score };
+    });
+    
+    // Sort by score and get top 6 results
+    const topResults = scoredTemplates
+      .filter(({ score }) => score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 6)
+      .map(({ template }) => template);
+    
+    setSearchResults(topResults);
+    setShowChatResults(true);
   };
 
   const totalOdds = selectedOutcomes.reduce((acc, outcome) => acc * outcome.odds, 1);
@@ -252,6 +327,79 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
           </div>
         </div>
       )}
+
+      {/* AI Chat Search */}
+      <div className="mb-4">
+        <div className="flex items-center gap-2 mb-2">
+          <MessageCircle className="w-4 h-4 text-cyan-400" />
+          <h3 className="text-white">Ask for outcomes</h3>
+        </div>
+        
+        <form onSubmit={handleChatSearch} className="relative">
+          <input
+            type="text"
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value)}
+            placeholder="e.g., 'Alcaraz wins, then double fault, then breaks serve'"
+            className="w-full bg-[#1a2f4d] text-white placeholder-gray-500 rounded-xl px-4 py-3 pr-12 border border-cyan-500/30 focus:border-cyan-500/60 focus:outline-none"
+          />
+          <button
+            type="submit"
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-cyan-500 hover:bg-cyan-600 rounded-lg transition-colors"
+          >
+            <Send className="w-4 h-4 text-white" />
+          </button>
+        </form>
+
+        {/* Search Results */}
+        {showChatResults && searchResults.length > 0 && (
+          <div className="mt-3 bg-[#0f1f3d] border border-cyan-500/30 rounded-xl p-3">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-cyan-400 text-sm">Top matches for "{chatInput}"</p>
+              <button 
+                onClick={() => setShowChatResults(false)}
+                className="text-gray-400 hover:text-white text-xs"
+              >
+                Clear
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {searchResults.map(template => {
+                const processedDescription = template.description
+                  .replace('{player1}', match.player1)
+                  .replace('{player2}', match.player2);
+                
+                return (
+                  <button
+                    key={template.id}
+                    onClick={() => {
+                      addOutcome(template);
+                      setChatInput('');
+                      setShowChatResults(false);
+                    }}
+                    className="bg-[#1a2f4d] hover:bg-[#243a5c] text-white p-3 rounded-xl text-sm text-left transition-all active:scale-95 border border-cyan-500/20"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <p className="flex-1 pr-2">{processedDescription}</p>
+                      <span className="text-lg">{template.icon}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-cyan-400 text-xs">{template.odds.toFixed(2)}x</span>
+                      <span className="text-gray-500 text-xs">{template.timeLimit}s</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {showChatResults && searchResults.length === 0 && (
+          <div className="mt-3 bg-red-600/20 border border-red-500/30 rounded-xl p-3">
+            <p className="text-red-300 text-sm">No matches found. Try different keywords like "ace", "break serve", or player names.</p>
+          </div>
+        )}
+      </div>
 
       {/* Available Outcomes */}
       <div className="flex-1 overflow-y-auto">
