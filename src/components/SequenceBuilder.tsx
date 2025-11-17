@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Plus, Trash2, Sparkles, CheckCircle, AlertCircle, GripVertical, Send, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Sparkles, CheckCircle, AlertCircle, GripVertical, Send, MessageCircle, TrendingUp, Users } from 'lucide-react';
 import { Match, SequenceOutcome } from '../App';
 import { Button } from './ui/button';
 
@@ -65,6 +65,82 @@ const SUGGESTED_SEQUENCES = [
   }
 ];
 
+interface PopularSequence {
+  name: string;
+  outcomes: string[];
+  bettors: number;
+  winRate: number;
+}
+
+interface FriendSequence {
+  name: string;
+  outcomes: string[];
+  friendName: string;
+  friendAvatar: string;
+  status: 'live' | 'completed';
+  result?: 'won' | 'lost';
+}
+
+const POPULAR_SEQUENCES: PopularSequence[] = [
+  {
+    name: 'Alcaraz Breaks Back',
+    outcomes: ['player1-breaks', 'player1-holds', 'ace'],
+    bettors: 2847,
+    winRate: 68
+  },
+  {
+    name: 'Pressure Points',
+    outcomes: ['break-point', 'double-fault', 'player1-breaks'],
+    bettors: 1923,
+    winRate: 72
+  },
+  {
+    name: 'Service Game Masterclass',
+    outcomes: ['ace', 'love-game', 'player1-holds'],
+    bettors: 1654,
+    winRate: 65
+  },
+  {
+    name: 'Deuce Drama',
+    outcomes: ['game-to-deuce', 'break-point', 'player2-breaks'],
+    bettors: 1432,
+    winRate: 58
+  }
+];
+
+const FRIEND_SEQUENCES: FriendSequence[] = [
+  {
+    name: 'Sarah\'s Pick',
+    outcomes: ['player1-wins-game', 'double-fault', 'player1-breaks'],
+    friendName: 'Sarah Chen',
+    friendAvatar: '👩',
+    status: 'live'
+  },
+  {
+    name: 'Mike\'s Streak',
+    outcomes: ['ace', 'player1-holds', 'player2-holds'],
+    friendName: 'Mike Johnson',
+    friendAvatar: '👨',
+    status: 'completed',
+    result: 'won'
+  },
+  {
+    name: 'Alex\'s Rally',
+    outcomes: ['long-rally', 'baseline-winner', 'game-to-deuce'],
+    friendName: 'Alex Kim',
+    friendAvatar: '🧑',
+    status: 'live'
+  },
+  {
+    name: 'Emma\'s Bold',
+    outcomes: ['break-back', 'player2-breaks', 'double-fault'],
+    friendName: 'Emma Davis',
+    friendAvatar: '👩‍🦰',
+    status: 'completed',
+    result: 'lost'
+  }
+];
+
 export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderProps) {
   const [selectedOutcomes, setSelectedOutcomes] = useState<SequenceOutcome[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(true);
@@ -72,6 +148,7 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
   const [chatInput, setChatInput] = useState('');
   const [searchResults, setSearchResults] = useState<OutcomeTemplate[]>([]);
   const [showChatResults, setShowChatResults] = useState(false);
+  const [suggestionTab, setSuggestionTab] = useState<'popular' | 'friends'>('popular');
 
   const addOutcome = (template: OutcomeTemplate) => {
     const processedDescription = template.description
@@ -309,22 +386,118 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
       {/* Suggested Sequences */}
       {showSuggestions && selectedOutcomes.length === 0 && (
         <div className="mb-4">
-          <h3 className="text-white mb-3 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-yellow-400" />
-            Suggested Sequences
-          </h3>
-          <div className="space-y-2">
-            {SUGGESTED_SEQUENCES.map((seq, index) => (
-              <button
-                key={index}
-                onClick={() => loadSuggestedSequence(seq.outcomes)}
-                className="w-full bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30 rounded-xl p-3 text-left hover:border-purple-500/60 transition-all"
-              >
-                <p className="text-white text-sm mb-1">{seq.name}</p>
-                <p className="text-gray-400 text-xs">{seq.description}</p>
-              </button>
-            ))}
+          {/* Tabs */}
+          <div className="flex gap-2 mb-3">
+            <button
+              onClick={() => setSuggestionTab('popular')}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl transition-all ${
+                suggestionTab === 'popular'
+                  ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white'
+                  : 'bg-[#1a2f4d] text-gray-400 hover:text-white'
+              }`}
+            >
+              <TrendingUp className="w-4 h-4" />
+              <span className="text-sm">Popular</span>
+            </button>
+            <button
+              onClick={() => setSuggestionTab('friends')}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl transition-all ${
+                suggestionTab === 'friends'
+                  ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
+                  : 'bg-[#1a2f4d] text-gray-400 hover:text-white'
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              <span className="text-sm">Friends</span>
+            </button>
           </div>
+
+          {/* Popular Sequences */}
+          {suggestionTab === 'popular' && (
+            <div className="space-y-2">
+              {POPULAR_SEQUENCES.map((seq, index) => (
+                <button
+                  key={index}
+                  onClick={() => loadSuggestedSequence(seq.outcomes)}
+                  className="w-full bg-gradient-to-br from-[#1a2f4d] to-[#0f1f3d] border border-orange-500/30 rounded-xl p-3 text-left hover:border-orange-500/60 transition-all"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1">
+                      <p className="text-white text-sm mb-1">{seq.name}</p>
+                      <p className="text-gray-400 text-xs">{seq.outcomes.length} outcomes</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <div className="flex items-center gap-1">
+                        <span className="text-orange-400 text-xs">{(seq.bettors / 1000).toFixed(1)}K</span>
+                        <TrendingUp className="w-3 h-3 text-orange-400" />
+                      </div>
+                      <span className="text-green-400 text-xs">{seq.winRate}% win</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {seq.outcomes.slice(0, 3).map((outcomeId, idx) => {
+                      const template = OUTCOME_TEMPLATES.find(t => t.id === outcomeId);
+                      return template ? (
+                        <span key={idx} className="text-xs bg-[#0f1f3d] px-2 py-0.5 rounded text-gray-300">
+                          {template.icon} {template.description.replace('{player1}', match.player1.split(' ')[0]).replace('{player2}', match.player2.split(' ')[0])}
+                        </span>
+                      ) : null;
+                    })}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Friends Sequences */}
+          {suggestionTab === 'friends' && (
+            <div className="space-y-2">
+              {FRIEND_SEQUENCES.map((seq, index) => (
+                <button
+                  key={index}
+                  onClick={() => loadSuggestedSequence(seq.outcomes)}
+                  className="w-full bg-gradient-to-br from-[#1a2f4d] to-[#0f1f3d] border border-purple-500/30 rounded-xl p-3 text-left hover:border-purple-500/60 transition-all"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2 flex-1">
+                      <span className="text-2xl">{seq.friendAvatar}</span>
+                      <div>
+                        <p className="text-white text-sm">{seq.name}</p>
+                        <p className="text-gray-400 text-xs">{seq.friendName}</p>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      {seq.status === 'live' ? (
+                        <span className="flex items-center gap-1 text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full">
+                          <div className="w-1.5 h-1.5 bg-red-400 rounded-full animate-pulse" />
+                          LIVE
+                        </span>
+                      ) : seq.result === 'won' ? (
+                        <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">
+                          WON
+                        </span>
+                      ) : (
+                        <span className="text-xs bg-gray-500/20 text-gray-400 px-2 py-0.5 rounded-full">
+                          LOST
+                        </span>
+                      )}
+                      <span className="text-purple-400 text-xs">{seq.outcomes.length} picks</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {seq.outcomes.slice(0, 3).map((outcomeId, idx) => {
+                      const template = OUTCOME_TEMPLATES.find(t => t.id === outcomeId);
+                      return template ? (
+                        <span key={idx} className="text-xs bg-[#0f1f3d] px-2 py-0.5 rounded text-gray-300">
+                          {template.icon}
+                        </span>
+                      ) : null;
+                    })}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
