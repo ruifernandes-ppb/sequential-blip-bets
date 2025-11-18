@@ -3,12 +3,14 @@ import { EventSelection } from "./components/EventSelection";
 import { SequenceBuilder } from "./components/SequenceBuilder";
 import { LiveWatching } from "./components/LiveWatching";
 import { ResultScreen } from "./components/ResultScreen";
+import { FriendsStats } from "./components/FriendsStats";
 
 export type GameScreen =
   | "event-selection"
   | "sequence-builder"
   | "live-watching"
-  | "result";
+  | "result"
+  | "friends-stats";
 
 export interface Match {
   id: number;
@@ -92,7 +94,10 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#1e3a5f] via-[#0f1f3d] to-[#0a1628]">
       {currentScreen === "event-selection" && (
-        <EventSelection onMatchSelect={handleMatchSelect} />
+        <EventSelection 
+          onMatchSelect={handleMatchSelect}
+          onViewFriendsStats={() => setCurrentScreen("friends-stats")}
+        />
       )}
 
       {currentScreen === "sequence-builder" &&
@@ -129,6 +134,10 @@ export default function App() {
           finalWinnings={currentWinnings}
           initialStake={INITIAL_STAKE}
         />
+      )}
+
+      {currentScreen === "friends-stats" && (
+        <FriendsStats onBack={() => setCurrentScreen("event-selection")} />
       )}
     </div>
   );

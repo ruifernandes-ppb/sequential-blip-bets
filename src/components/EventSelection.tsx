@@ -1,9 +1,10 @@
-import { Trophy, Clock, ArrowRight } from 'lucide-react';
+import { Trophy, Clock, ArrowRight, Users } from 'lucide-react';
 import { Match } from '../App';
 import { Button } from './ui/button';
 
 interface EventSelectionProps {
   onMatchSelect: (match: Match) => void;
+  onViewFriendsStats?: () => void;
 }
 
 const LIVE_MATCHES: Match[] = [
@@ -84,7 +85,7 @@ const LIVE_MATCHES: Match[] = [
   }
 ];
 
-export function EventSelection({ onMatchSelect }: EventSelectionProps) {
+export function EventSelection({ onMatchSelect, onViewFriendsStats }: EventSelectionProps) {
   return (
     <div className="min-h-screen flex flex-col p-4 max-w-md mx-auto">
       {/* Header */}
@@ -149,6 +150,21 @@ export function EventSelection({ onMatchSelect }: EventSelectionProps) {
           Create your storyline with sequential outcomes. Each event adds tension and potential reward.
         </p>
       </div>
+
+      {/* Friends Stats Button */}
+      {onViewFriendsStats && (
+        <div className="mt-4">
+          <Button
+            onClick={onViewFriendsStats}
+            className="w-full bg-gradient-to-br from-[#1a2f4d] to-[#0f1f3d] rounded-2xl p-4 border border-cyan-500/30 hover:border-cyan-500/60 transition-all active:scale-[0.98]"
+          >
+            <div className="flex items-center justify-center gap-2">
+              <Users className="w-5 h-5 text-cyan-400" />
+              <span className="text-cyan-400 text-sm">View Friends Stats</span>
+            </div>
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
