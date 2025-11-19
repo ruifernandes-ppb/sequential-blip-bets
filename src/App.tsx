@@ -4,13 +4,17 @@ import { SequenceBuilder } from "./components/SequenceBuilder";
 import { LiveWatching } from "./components/LiveWatching";
 import { ResultScreen } from "./components/ResultScreen";
 import { FriendsStats } from "./components/FriendsStats";
+import { PenaltyShootout } from "./components/PenaltyShootout";
+import { PenaltyResult } from "./components/PenaltyResult";
 
 export type GameScreen =
   | "event-selection"
   | "sequence-builder"
   | "live-watching"
   | "result"
-  | "friends-stats";
+  | "friends-stats"
+  | "penalty-shootout"
+  | "penalty-result";
 
 export interface Match {
   id: number;
@@ -56,6 +60,11 @@ export default function App() {
   const [betHistory, setBetHistory] = useState<BetResult[]>([]);
   const [currentWinnings, setCurrentWinnings] = useState(0);
   const [totalPoints, setTotalPoints] = useState(0);
+  const [penaltyStats, setPenaltyStats] = useState({
+    winnings: 0,
+    correctPredictions: 0,
+    totalPenalties: 0
+  });
 
   const INITIAL_STAKE = 10;
 
@@ -89,6 +98,12 @@ export default function App() {
     setBetHistory([]);
     setCurrentWinnings(0);
     setTotalPoints(0);
+    setPenaltyStats({ winnings: 0, correctPredictions: 0, totalPenalties: 0 });
+  };
+
+  const handlePenaltyComplete = (winnings: number, correctPredictions: number, totalPenalties: number) => {
+    setPenaltyStats({ winnings, correctPredictions, totalPenalties });
+    setCurrentScreen("penalty-result");
   };
 
   return (
@@ -97,6 +112,7 @@ export default function App() {
         <EventSelection 
           onMatchSelect={handleMatchSelect}
           onViewFriendsStats={() => setCurrentScreen("friends-stats")}
+          onPenaltyShootout={() => setCurrentScreen("penalty-shootout")}
         />
       )}
 
@@ -138,6 +154,24 @@ export default function App() {
 
       {currentScreen === "friends-stats" && (
         <FriendsStats onBack={() => setCurrentScreen("event-selection")} />
+      )}
+
+      {currentScreen === "penalty-shootout" && (
+        <PenaltyShootout
+          onBack={() => setCurrentScreen("event-selection")}
+          onComplete={handlePenaltyComplete}
+        />
+      )}
+
+      {currentScreen === "penalty-result" && (
+        <PenaltyResult
+          finalWinnings={penaltyStats.winnings}
+          correctPredictions={penaltyStats.correctPredictions}
+          totalPenalties={penaltyStats.totalPenalties}
+          initialStake={INITIAL_STAKE}
+          onPlayAgain={() => setCurrentScreen("penalty-shootout")}
+          onBackToMenu={handlePlayAgain}
+        />
       )}
     </div>
   );

@@ -19,32 +19,32 @@ interface OutcomeTemplate {
 }
 
 const OUTCOME_TEMPLATES: OutcomeTemplate[] = [
-  // Game outcomes
-  { id: 'player1-wins-game', category: 'game', description: '{player1} wins next game', odds: 1.40, icon: '🎾', timeLimit: 15 },
-  { id: 'player2-wins-game', category: 'game', description: '{player2} wins next game', odds: 1.45, icon: '🎾', timeLimit: 15 },
-  { id: 'game-to-deuce', category: 'game', description: 'Game goes to deuce', odds: 1.35, icon: '🎾', timeLimit: 12 },
-  { id: 'love-game', category: 'game', description: 'Server wins at love', odds: 1.50, icon: '🎾', timeLimit: 10 },
+  // Goal outcomes
+  { id: 'player1-scores', category: 'game', description: '{player1} scores next goal', odds: 1.42, icon: '⚽', timeLimit: 15 },
+  { id: 'player2-scores', category: 'game', description: '{player2} scores next goal', odds: 1.45, icon: '⚽', timeLimit: 15 },
+  { id: 'no-goal-10min', category: 'game', description: 'No goals in next 10 minutes', odds: 1.28, icon: '🚫', timeLimit: 10 },
+  { id: 'both-teams-score', category: 'game', description: 'Both teams score next', odds: 1.50, icon: '⚽⚽', timeLimit: 20 },
   
-  // Point outcomes
-  { id: 'ace', category: 'point', description: 'Ace in next game', odds: 1.42, icon: '⚡', timeLimit: 12 },
-  { id: 'double-fault', category: 'point', description: 'Double fault in next game', odds: 1.38, icon: '❌', timeLimit: 12 },
-  { id: 'break-point', category: 'point', description: 'Break point opportunity', odds: 1.30, icon: '🔥', timeLimit: 10 },
-  { id: 'winner-shot', category: 'point', description: 'Winner on next point', odds: 1.35, icon: '💥', timeLimit: 8 },
+  // Shot outcomes
+  { id: 'shot-on-target', category: 'point', description: 'Shot on target next minute', odds: 1.32, icon: '🎯', timeLimit: 5 },
+  { id: 'player1-corner', category: 'point', description: '{player1} wins corner', odds: 1.35, icon: '🚩', timeLimit: 10 },
+  { id: 'player2-corner', category: 'point', description: '{player2} wins corner', odds: 1.38, icon: '🚩', timeLimit: 10 },
+  { id: 'offside-call', category: 'point', description: 'Offside in next 5 minutes', odds: 1.30, icon: '🏴', timeLimit: 5 },
   
-  // Serve outcomes
-  { id: 'player1-holds', category: 'serve', description: '{player1} holds serve', odds: 1.25, icon: '✓', timeLimit: 15 },
-  { id: 'player2-holds', category: 'serve', description: '{player2} holds serve', odds: 1.28, icon: '✓', timeLimit: 15 },
-  { id: 'first-serve-in', category: 'serve', description: '3+ first serves in next game', odds: 1.22, icon: '🎯', timeLimit: 12 },
+  // Card outcomes
+  { id: 'yellow-card', category: 'serve', description: 'Yellow card shown', odds: 1.40, icon: '🟨', timeLimit: 10 },
+  { id: 'player1-yellow', category: 'serve', description: '{player1} player gets yellow', odds: 1.45, icon: '🟨', timeLimit: 12 },
+  { id: 'player2-yellow', category: 'serve', description: '{player2} player gets yellow', odds: 1.48, icon: '🟨', timeLimit: 12 },
   
-  // Break outcomes
-  { id: 'player1-breaks', category: 'break', description: '{player1} breaks serve', odds: 1.48, icon: '💪', timeLimit: 15 },
-  { id: 'player2-breaks', category: 'break', description: '{player2} breaks serve', odds: 1.50, icon: '💪', timeLimit: 15 },
-  { id: 'break-back', category: 'break', description: 'Immediate break back', odds: 1.45, icon: '🔄', timeLimit: 15 },
+  // Possession outcomes
+  { id: 'player1-attack', category: 'break', description: '{player1} dangerous attack', odds: 1.35, icon: '⚡', timeLimit: 8 },
+  { id: 'player2-attack', category: 'break', description: '{player2} dangerous attack', odds: 1.38, icon: '⚡', timeLimit: 8 },
+  { id: 'goalkeeper-save', category: 'break', description: 'Goalkeeper makes save', odds: 1.42, icon: '🧤', timeLimit: 10 },
   
-  // Rally outcomes
-  { id: 'long-rally', category: 'rally', description: 'Rally of 10+ shots', odds: 1.38, icon: '🏓', timeLimit: 10 },
-  { id: 'net-point', category: 'rally', description: 'Point won at net', odds: 1.32, icon: '🏐', timeLimit: 8 },
-  { id: 'baseline-winner', category: 'rally', description: 'Baseline winner', odds: 1.30, icon: '🎯', timeLimit: 8 },
+  // Special outcomes
+  { id: 'free-kick', category: 'rally', description: 'Free kick awarded', odds: 1.25, icon: '🦶', timeLimit: 8 },
+  { id: 'substitution', category: 'rally', description: 'Substitution made', odds: 1.30, icon: '🔄', timeLimit: 15 },
+  { id: 'penalty-appeal', category: 'rally', description: 'Penalty appeal', odds: 1.50, icon: '🙋', timeLimit: 10 },
 ];
 
 const SUGGESTED_SEQUENCES = [
@@ -83,26 +83,26 @@ interface FriendSequence {
 
 const POPULAR_SEQUENCES: PopularSequence[] = [
   {
-    name: 'Alcaraz Breaks Back',
-    outcomes: ['player1-breaks', 'player1-holds', 'ace'],
+    name: 'Portugal Domination',
+    outcomes: ['player1-scores', 'player1-corner', 'player1-attack'],
     bettors: 2847,
     winRate: 68
   },
   {
-    name: 'Pressure Points',
-    outcomes: ['break-point', 'double-fault', 'player1-breaks'],
+    name: 'High Pressure Match',
+    outcomes: ['yellow-card', 'free-kick', 'player1-scores'],
     bettors: 1923,
     winRate: 72
   },
   {
-    name: 'Service Game Masterclass',
-    outcomes: ['ace', 'love-game', 'player1-holds'],
+    name: 'Corner to Goal',
+    outcomes: ['player1-corner', 'shot-on-target', 'player1-scores'],
     bettors: 1654,
     winRate: 65
   },
   {
-    name: 'Deuce Drama',
-    outcomes: ['game-to-deuce', 'break-point', 'player2-breaks'],
+    name: 'Defensive Battle',
+    outcomes: ['goalkeeper-save', 'no-goal-10min', 'yellow-card'],
     bettors: 1432,
     winRate: 58
   }
@@ -111,29 +111,29 @@ const POPULAR_SEQUENCES: PopularSequence[] = [
 const FRIEND_SEQUENCES: FriendSequence[] = [
   {
     name: 'Sarah\'s Pick',
-    outcomes: ['player1-wins-game', 'double-fault', 'player1-breaks'],
+    outcomes: ['player1-scores', 'player1-corner', 'player1-attack'],
     friendName: 'Sarah Chen',
     friendAvatar: '👩',
     status: 'live'
   },
   {
     name: 'Mike\'s Streak',
-    outcomes: ['ace', 'player1-holds', 'player2-holds'],
+    outcomes: ['shot-on-target', 'player1-scores', 'both-teams-score'],
     friendName: 'Mike Johnson',
     friendAvatar: '👨',
     status: 'completed',
     result: 'won'
   },
   {
-    name: 'Alex\'s Rally',
-    outcomes: ['long-rally', 'baseline-winner', 'game-to-deuce'],
+    name: 'Alex\'s Bold',
+    outcomes: ['free-kick', 'yellow-card', 'player2-scores'],
     friendName: 'Alex Kim',
     friendAvatar: '🧑',
     status: 'live'
   },
   {
-    name: 'Emma\'s Bold',
-    outcomes: ['break-back', 'player2-breaks', 'double-fault'],
+    name: 'Emma\'s Risk',
+    outcomes: ['penalty-appeal', 'player2-attack', 'offside-call'],
     friendName: 'Emma Davis',
     friendAvatar: '👩‍🦰',
     status: 'completed',
@@ -242,27 +242,28 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
       });
       
       // Player name matching
-      if (searchLower.includes('alcaraz') || searchLower.includes(match.player1.toLowerCase())) {
+      if (searchLower.includes('portugal') || searchLower.includes(match.player1.toLowerCase())) {
         if (template.id.includes('player1')) score += 30;
       }
-      if (searchLower.includes('sinner') || searchLower.includes(match.player2.toLowerCase())) {
+      if (searchLower.includes('ireland') || searchLower.includes('armenia') || searchLower.includes(match.player2.toLowerCase())) {
         if (template.id.includes('player2')) score += 30;
       }
       
       // Specific term matching
       const termMatches: Record<string, string[]> = {
-        'ace': ['ace'],
-        'double fault': ['double-fault', 'fault'],
-        'break': ['break', 'breaks'],
-        'hold': ['hold', 'holds'],
-        'deuce': ['deuce'],
-        'love': ['love'],
-        'rally': ['rally'],
-        'net': ['net'],
-        'winner': ['winner'],
-        'serve': ['serve', 'holds', 'breaks'],
-        'game': ['game', 'wins'],
-        'point': ['point', 'break-point']
+        'goal': ['scores', 'goal'],
+        'score': ['scores'],
+        'corner': ['corner'],
+        'shot': ['shot'],
+        'yellow': ['yellow'],
+        'card': ['yellow', 'card'],
+        'attack': ['attack'],
+        'save': ['save'],
+        'goalkeeper': ['save', 'goalkeeper'],
+        'free kick': ['free-kick'],
+        'offside': ['offside'],
+        'penalty': ['penalty'],
+        'substitution': ['substitution']
       };
       
       Object.entries(termMatches).forEach(([term, ids]) => {
@@ -291,11 +292,11 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
   const potentialWinnings = 10 * totalOdds;
 
   const categoryIcons = {
-    game: '🎾',
-    point: '⚡',
-    serve: '✓',
-    break: '💪',
-    rally: '🏓'
+    game: '⚽',
+    point: '🎯',
+    serve: '🟨',
+    break: '⚡',
+    rally: '🦶'
   };
 
   // Group options by category
@@ -308,11 +309,11 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
   }, {} as Record<string, OutcomeTemplate[]>);
 
   const categoryLabels = {
-    game: '🎾 Games',
-    point: '⚡ Points',
-    serve: '✓ Serves',
-    break: '💪 Breaks',
-    rally: '🏓 Rallies'
+    game: '⚽ Goals',
+    point: '🎯 Shots',
+    serve: '🟨 Cards',
+    break: '⚡ Attacks',
+    rally: '🦶 Events'
   };
 
   return (
@@ -513,7 +514,7 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
             type="text"
             value={chatInput}
             onChange={(e) => setChatInput(e.target.value)}
-            placeholder="e.g., 'Alcaraz wins, then double fault, then breaks serve'"
+            placeholder="e.g., 'Portugal scores, then corner, then yellow card'"
             className="w-full bg-[#1a2f4d] text-white placeholder-gray-500 rounded-xl px-4 py-3 pr-12 border border-cyan-500/30 focus:border-cyan-500/60 focus:outline-none"
           />
           <button
@@ -569,7 +570,7 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
 
         {showChatResults && searchResults.length === 0 && (
           <div className="mt-3 bg-red-600/20 border border-red-500/30 rounded-xl p-3">
-            <p className="text-red-300 text-sm">No matches found. Try different keywords like "ace", "break serve", or player names.</p>
+            <p className="text-red-300 text-sm">No matches found. Try different keywords like "goal", "corner", "yellow card", or team names.</p>
           </div>
         )}
       </div>

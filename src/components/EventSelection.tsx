@@ -1,91 +1,92 @@
-import { Trophy, Clock, ArrowRight, Users } from 'lucide-react';
+import { Trophy, Clock, ArrowRight, Users, Target } from 'lucide-react';
 import { Match } from '../App';
 import { Button } from './ui/button';
 
 interface EventSelectionProps {
   onMatchSelect: (match: Match) => void;
   onViewFriendsStats?: () => void;
+  onPenaltyShootout?: () => void;
 }
 
 const LIVE_MATCHES: Match[] = [
   {
     id: 1,
-    player1: 'Carlos Alcaraz',
-    player2: 'Jannik Sinner',
-    player1Sets: 1,
-    player2Sets: 1,
-    player1Games: 4,
-    player2Games: 3,
-    player1Points: '30',
-    player2Points: '40',
-    currentSet: 3,
-    tournament: 'Australian Open - Final',
+    player1: 'Portugal',
+    player2: 'Ireland',
+    player1Sets: 0,
+    player2Sets: 0,
+    player1Games: 0,
+    player2Games: 0,
+    player1Points: '0',
+    player2Points: '0',
+    currentSet: 1,
+    tournament: 'World Cup Qualification',
     isLive: true,
-    servingPlayer: 2
+    servingPlayer: 1
   },
   {
     id: 2,
-    player1: 'Novak Djokovic',
-    player2: 'Daniil Medvedev',
-    player1Sets: 2,
+    player1: 'Portugal',
+    player2: 'Armenia',
+    player1Sets: 1,
     player2Sets: 0,
-    player1Games: 2,
-    player2Games: 1,
-    player1Points: '15',
+    player1Games: 0,
+    player2Games: 0,
+    player1Points: '0',
     player2Points: '0',
-    currentSet: 3,
-    tournament: 'ATP Masters 1000',
+    currentSet: 2,
+    tournament: 'World Cup Qualification',
     isLive: true,
     servingPlayer: 1
   },
   {
     id: 3,
-    player1: 'Aryna Sabalenka',
-    player2: 'Iga Świątek',
+    player1: 'Spain',
+    player2: 'France',
     player1Sets: 0,
     player2Sets: 1,
-    player1Games: 5,
-    player2Games: 4,
-    player1Points: '40',
-    player2Points: '40',
-    currentSet: 2,
-    tournament: 'WTA Finals',
-    isLive: true,
-    servingPlayer: 1
-  },
-  {
-    id: 4,
-    player1: 'Stefanos Tsitsipas',
-    player2: 'Alexander Zverev',
-    player1Sets: 1,
-    player2Sets: 0,
-    player1Games: 3,
-    player2Games: 2,
+    player1Games: 0,
+    player2Games: 0,
     player1Points: '0',
-    player2Points: '15',
+    player2Points: '0',
     currentSet: 2,
-    tournament: 'Roland Garros',
+    tournament: 'UEFA Nations League',
     isLive: true,
     servingPlayer: 2
   },
   {
-    id: 5,
-    player1: 'Coco Gauff',
-    player2: 'Jessica Pegula',
-    player1Sets: 0,
-    player2Sets: 0,
-    player1Games: 1,
-    player2Games: 1,
-    player1Points: '30',
-    player2Points: '30',
-    currentSet: 1,
-    tournament: 'US Open',
+    id: 4,
+    player1: 'England',
+    player2: 'Germany',
+    player1Sets: 1,
+    player2Sets: 1,
+    player1Games: 0,
+    player2Games: 0,
+    player1Points: '0',
+    player2Points: '0',
+    currentSet: 3,
+    tournament: 'International Friendly',
     isLive: true,
     servingPlayer: 1
+  },
+  {
+    id: 5,
+    player1: 'Brazil',
+    player2: 'Argentina',
+    player1Sets: 0,
+    player2Sets: 0,
+    player1Games: 0,
+    player2Games: 0,
+    player1Points: '0',
+    player2Points: '0',
+    currentSet: 1,
+    tournament: 'Copa America',
+    isLive: true,
+    servingPlayer: 2
   }
 ];
 
-export function EventSelection({ onMatchSelect, onViewFriendsStats }: EventSelectionProps) {
+export function EventSelection({ onMatchSelect, onViewFriendsStats, onPenaltyShootout }: EventSelectionProps) {
   return (
     <div className="min-h-screen flex flex-col p-4 max-w-md mx-auto">
       {/* Header */}
@@ -96,6 +97,62 @@ export function EventSelection({ onMatchSelect, onViewFriendsStats }: EventSelec
         </div>
         <p className="text-gray-400">Bet on the story, not just the score</p>
       </div>
+
+      {/* Penalty Shootout Special */}
+      {onPenaltyShootout && (
+        <div className="mb-6">
+          <button
+            onClick={onPenaltyShootout}
+            className="w-full bg-gradient-to-br from-yellow-600 to-orange-600 rounded-2xl p-6 border-2 border-yellow-400/50 hover:border-yellow-400 transition-all active:scale-[0.98] relative overflow-hidden"
+          >
+            {/* Animated background */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse" />
+            
+            <div className="relative">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <Trophy className="w-6 h-6 text-yellow-200" />
+                <span className="text-white font-bold">SPECIAL EVENT</span>
+                <Trophy className="w-6 h-6 text-yellow-200" />
+              </div>
+              
+              <h2 className="text-white text-xl mb-2">🏆 2026 World Cup Final 🏆</h2>
+              <p className="text-yellow-100 text-sm mb-3">Penalty Shootout Challenge</p>
+              
+              <div className="flex items-center justify-center gap-4 mb-3">
+                <div className="text-center">
+                  <div className="text-2xl mb-1">🇵🇹</div>
+                  <p className="text-white text-xs">Portugal</p>
+                </div>
+                <div className="flex flex-col items-center">
+                  <Target className="w-6 h-6 text-yellow-200 mb-1" />
+                  <p className="text-yellow-200 text-xs">VS</p>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl mb-1">🇦🇷</div>
+                  <p className="text-white text-xs">Argentina</p>
+                </div>
+              </div>
+              
+              <div className="bg-black/20 rounded-lg p-3">
+                <p className="text-yellow-100 text-xs mb-2">
+                  ⚽ Predict each penalty: Score or Miss
+                </p>
+                <p className="text-yellow-100 text-xs mb-2">
+                  ⏱️ 10 seconds per decision
+                </p>
+                <p className="text-yellow-100 text-xs">
+                  💰 1.35x odds per correct prediction
+                </p>
+              </div>
+              
+              <div className="mt-3 flex items-center justify-center gap-2">
+                <span className="text-yellow-200 text-sm font-bold">Start Shootout</span>
+                <ArrowRight className="w-4 h-4 text-yellow-200" />
+              </div>
+            </div>
+          </button>
+        </div>
+      )}
 
       {/* Live Badge */}
       <div className="flex items-center gap-2 mb-4">
@@ -119,7 +176,7 @@ export function EventSelection({ onMatchSelect, onViewFriendsStats }: EventSelec
               <span className="text-gray-400 text-xs">{match.tournament}</span>
               <div className="flex items-center gap-1 text-orange-400">
                 <Clock className="w-3 h-3" />
-                <span className="text-xs">{match.currentSet} set</span>
+                <span className="text-xs">{match.currentSet === 1 ? '1st Half' : '2nd Half'}</span>
               </div>
             </div>
 
