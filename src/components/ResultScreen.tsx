@@ -57,14 +57,14 @@ export function ResultScreen({
       <div className="bg-gradient-to-br from-[#1a2f4d] to-[#0f1f3d] rounded-3xl p-6 mb-4 border border-cyan-500/30">
         <h3 className="text-white mb-4 text-center">Your Winnings</h3>
         <div className="text-center mb-4">
-          <div className="text-5xl text-cyan-400 mb-2">${finalWinnings.toFixed(2)}</div>
+          <div className="text-5xl text-cyan-400 mb-2">€{finalWinnings.toFixed(2)}</div>
           <div className={`text-sm ${profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-            {profit >= 0 ? '+' : ''}{profit.toFixed(2)} ({profit >= 0 ? 'Profit' : 'Loss'})
+            {profit >= 0 ? '+' : ''}€{profit.toFixed(2)} ({profit >= 0 ? 'Profit' : 'Loss'})
           </div>
         </div>
         <div className="flex justify-between text-sm pt-3 border-t border-gray-700">
           <span className="text-gray-400">Initial Stake:</span>
-          <span className="text-white">${initialStake.toFixed(2)}</span>
+          <span className="text-white">€{initialStake.toFixed(2)}</span>
         </div>
       </div>
 

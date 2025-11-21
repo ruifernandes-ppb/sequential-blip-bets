@@ -1,7 +1,5 @@
 import { useState } from 'react';
 import { X, Search, User } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
-import { Button } from './ui/button';
 
 interface Player {
   id: string;
@@ -129,15 +127,20 @@ export function PlayerSelector({
     'FWD': 'text-red-400 bg-red-500/20'
   };
 
+  if (!isOpen) return null;
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gradient-to-b from-[#1e3a5f] to-[#0f1f3d] border-cyan-500/30 text-white max-w-md max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="text-white flex items-center gap-2">
+    <div className="fixed inset-0 bg-black/70 z-50 flex items-end">
+      <div className="bg-gradient-to-b from-[#1e3a5f] to-[#0f1f3d] w-full max-h-[70vh] rounded-t-3xl p-4 overflow-y-auto">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-white flex items-center gap-2">
             <User className="w-5 h-5 text-cyan-400" />
             Select Player
-          </DialogTitle>
-        </DialogHeader>
+          </h3>
+          <button onClick={onClose} className="text-white p-2">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
         {/* Search Bar */}
         <div className="relative mb-4">
@@ -188,13 +191,13 @@ export function PlayerSelector({
         )}
 
         {/* Players List */}
-        <div className="flex-1 overflow-y-auto -mx-6 px-6">
+        <div className="space-y-4">
           {Object.entries(groupedPlayers).map(([position, players]) => {
             if (players.length === 0) return null;
             
             return (
-              <div key={position} className="mb-4">
-                <h3 className="text-gray-400 text-sm mb-2 sticky top-0 bg-gradient-to-b from-[#1e3a5f] to-transparent py-2">
+              <div key={position}>
+                <h3 className="text-gray-400 text-sm mb-2">
                   {positionLabels[position]}
                 </h3>
                 <div className="grid grid-cols-2 gap-2">
@@ -228,16 +231,7 @@ export function PlayerSelector({
             </div>
           )}
         </div>
-
-        {/* Close Button */}
-        <Button
-          onClick={onClose}
-          variant="outline"
-          className="w-full mt-4 bg-[#1a2f4d] border-cyan-500/30 hover:border-cyan-500/60 text-white"
-        >
-          Cancel
-        </Button>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }

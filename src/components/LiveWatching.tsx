@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { X, Trophy, DollarSign, Zap, GripVertical, Clock, TrendingUp, Plus } from 'lucide-react';
 import { Match, SequenceOutcome, BetResult } from '../App';
 import { Button } from './ui/button';
+import { PlayerSelector } from './PlayerSelector';
+import { OutcomeList } from './OutcomeList';
 
 interface LiveWatchingProps {
   match: Match;
@@ -18,35 +20,48 @@ interface OutcomeTemplate {
   odds: number;
   icon: string;
   timeLimit: number;
+  allowPlayerSelection?: boolean;
+  playerSelectionTeam?: 'player1' | 'player2' | 'both';
+}
+
+interface Player {
+  id: string;
+  name: string;
+  number: number;
+  position: string;
+  team: 'player1' | 'player2';
 }
 
 const OUTCOME_TEMPLATES: OutcomeTemplate[] = [
-  // Game outcomes
-  { id: 'player1-wins-game', category: 'game', description: '{player1} wins next game', odds: 1.40, icon: '🎾', timeLimit: 15 },
-  { id: 'player2-wins-game', category: 'game', description: '{player2} wins next game', odds: 1.45, icon: '🎾', timeLimit: 15 },
-  { id: 'game-to-deuce', category: 'game', description: 'Game goes to deuce', odds: 1.35, icon: '🎾', timeLimit: 12 },
-  { id: 'love-game', category: 'game', description: 'Server wins at love', odds: 1.50, icon: '🎾', timeLimit: 10 },
+  // Goal outcomes - with player selection
+  { id: 'specific-player-scores', category: 'game', description: '{playerName} scores next goal', odds: 1.48, icon: '⚽', timeLimit: 15, allowPlayerSelection: true, playerSelectionTeam: 'both' },
+  { id: 'player1-scores', category: 'game', description: '{player1} scores next goal', odds: 1.42, icon: '⚽', timeLimit: 15 },
+  { id: 'player2-scores', category: 'game', description: '{player2} scores next goal', odds: 1.45, icon: '⚽', timeLimit: 15 },
+  { id: 'no-goal-10min', category: 'game', description: 'No goals in next 10 minutes', odds: 1.28, icon: '🚫', timeLimit: 10 },
+  { id: 'both-teams-score', category: 'game', description: 'Both teams score next', odds: 1.50, icon: '⚽⚽', timeLimit: 20 },
   
-  // Point outcomes
-  { id: 'ace', category: 'point', description: 'Ace in next game', odds: 1.42, icon: '⚡', timeLimit: 12 },
-  { id: 'double-fault', category: 'point', description: 'Double fault in next game', odds: 1.38, icon: '❌', timeLimit: 12 },
-  { id: 'break-point', category: 'point', description: 'Break point opportunity', odds: 1.30, icon: '🔥', timeLimit: 10 },
-  { id: 'winner-shot', category: 'point', description: 'Winner on next point', odds: 1.35, icon: '💥', timeLimit: 8 },
+  // Shot outcomes - with player selection for some
+  { id: 'specific-player-shot', category: 'point', description: '{playerName} shot on target', odds: 1.40, icon: '🎯', timeLimit: 5, allowPlayerSelection: true, playerSelectionTeam: 'both' },
+  { id: 'shot-on-target', category: 'point', description: 'Shot on target next minute', odds: 1.32, icon: '🎯', timeLimit: 5 },
+  { id: 'player1-corner', category: 'point', description: '{player1} wins corner', odds: 1.35, icon: '🚩', timeLimit: 10 },
+  { id: 'player2-corner', category: 'point', description: '{player2} wins corner', odds: 1.38, icon: '🚩', timeLimit: 10 },
+  { id: 'offside-call', category: 'point', description: 'Offside in next 5 minutes', odds: 1.30, icon: '🏴', timeLimit: 5 },
   
-  // Serve outcomes
-  { id: 'player1-holds', category: 'serve', description: '{player1} holds serve', odds: 1.25, icon: '✓', timeLimit: 15 },
-  { id: 'player2-holds', category: 'serve', description: '{player2} holds serve', odds: 1.28, icon: '✓', timeLimit: 15 },
-  { id: 'first-serve-in', category: 'serve', description: '3+ first serves in next game', odds: 1.22, icon: '🎯', timeLimit: 12 },
+  // Card outcomes - with player selection
+  { id: 'specific-player-yellow', category: 'serve', description: '{playerName} gets yellow card', odds: 1.50, icon: '🟨', timeLimit: 12, allowPlayerSelection: true, playerSelectionTeam: 'both' },
+  { id: 'yellow-card', category: 'serve', description: 'Yellow card shown', odds: 1.40, icon: '🟨', timeLimit: 10 },
+  { id: 'player1-yellow', category: 'serve', description: '{player1} player gets yellow', odds: 1.45, icon: '🟨', timeLimit: 12 },
+  { id: 'player2-yellow', category: 'serve', description: '{player2} player gets yellow', odds: 1.48, icon: '🟨', timeLimit: 12 },
   
-  // Break outcomes
-  { id: 'player1-breaks', category: 'break', description: '{player1} breaks serve', odds: 1.48, icon: '💪', timeLimit: 15 },
-  { id: 'player2-breaks', category: 'break', description: '{player2} breaks serve', odds: 1.50, icon: '💪', timeLimit: 15 },
-  { id: 'break-back', category: 'break', description: 'Immediate break back', odds: 1.45, icon: '🔄', timeLimit: 15 },
+  // Possession outcomes
+  { id: 'player1-attack', category: 'break', description: '{player1} dangerous attack', odds: 1.35, icon: '⚡', timeLimit: 8 },
+  { id: 'player2-attack', category: 'break', description: '{player2} dangerous attack', odds: 1.38, icon: '⚡', timeLimit: 8 },
+  { id: 'goalkeeper-save', category: 'break', description: 'Goalkeeper makes save', odds: 1.42, icon: '🧤', timeLimit: 10 },
   
-  // Rally outcomes
-  { id: 'long-rally', category: 'rally', description: 'Rally of 10+ shots', odds: 1.38, icon: '🏓', timeLimit: 10 },
-  { id: 'net-point', category: 'rally', description: 'Point won at net', odds: 1.32, icon: '🏐', timeLimit: 8 },
-  { id: 'baseline-winner', category: 'rally', description: 'Baseline winner', odds: 1.30, icon: '🎯', timeLimit: 8 },
+  // Special outcomes
+  { id: 'free-kick', category: 'rally', description: 'Free kick awarded', odds: 1.25, icon: '🦶', timeLimit: 8 },
+  { id: 'substitution', category: 'rally', description: 'Substitution made', odds: 1.30, icon: '🔄', timeLimit: 15 },
+  { id: 'penalty-appeal', category: 'rally', description: 'Penalty appeal', odds: 1.50, icon: '🙋', timeLimit: 10 },
 ];
 
 export function LiveWatching({ match, initialSequence, initialStake, onComplete, onBack }: LiveWatchingProps) {
@@ -57,6 +72,8 @@ export function LiveWatching({ match, initialSequence, initialStake, onComplete,
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showAddMenu, setShowAddMenu] = useState(false);
+  const [showPlayerSelector, setShowPlayerSelector] = useState(false);
+  const [pendingTemplate, setPendingTemplate] = useState<OutcomeTemplate | null>(null);
 
   const CORRECT_PENALTY_MULTIPLIER = 1; // Keep 100% of winnings
   const WRONG_ANSWER_PENALTY = 0.85; // Keep 85% of winnings
@@ -235,10 +252,31 @@ export function LiveWatching({ match, initialSequence, initialStake, onComplete,
     onComplete(history, currentWinnings, totalPoints);
   };
 
-  const addSelection = (template: OutcomeTemplate) => {
-    const processedDescription = template.description
+  const handleOutcomeClick = (template: OutcomeTemplate) => {
+    if (template.allowPlayerSelection) {
+      setPendingTemplate(template);
+      setShowPlayerSelector(true);
+    } else {
+      addOutcome(template, null);
+    }
+  };
+
+  const handlePlayerSelect = (player: Player) => {
+    if (pendingTemplate) {
+      addOutcome(pendingTemplate, player);
+      setPendingTemplate(null);
+      setShowAddMenu(false);
+    }
+  };
+
+  const addOutcome = (template: OutcomeTemplate, player: Player | null) => {
+    let processedDescription = template.description
       .replace('{player1}', match.player1)
       .replace('{player2}', match.player2);
+    
+    if (player) {
+      processedDescription = processedDescription.replace('{playerName}', player.name);
+    }
     
     const newOutcome: SequenceOutcome = {
       id: `${template.id}-${Date.now()}`,
@@ -292,13 +330,13 @@ export function LiveWatching({ match, initialSequence, initialStake, onComplete,
 
       {/* Stats */}
       <div className="bg-gradient-to-br from-[#1a2f4d] to-[#0f1f3d] rounded-2xl p-4 mb-4 border border-cyan-500/30">
-        <div className="grid grid-cols-3 gap-3 mb-3">
+        <div className="grid grid-cols-3 gap-3">
           <div className="text-center">
             <div className="flex items-center justify-center gap-1 mb-1">
               <DollarSign className="w-3 h-3 text-gray-400" />
               <span className="text-gray-400 text-xs">Start</span>
             </div>
-            <span className="text-white text-sm">${initialStake.toFixed(2)}</span>
+            <span className="text-white text-sm">€{initialStake.toFixed(2)}</span>
           </div>
 
           <div className="text-center">
@@ -306,7 +344,7 @@ export function LiveWatching({ match, initialSequence, initialStake, onComplete,
               <Trophy className="w-3 h-3 text-cyan-400" />
               <span className="text-gray-400 text-xs">Current</span>
             </div>
-            <span className="text-cyan-400">${currentWinnings.toFixed(2)}</span>
+            <span className="text-cyan-400">€{currentWinnings.toFixed(2)}</span>
           </div>
 
           <div className="text-center">
@@ -315,23 +353,6 @@ export function LiveWatching({ match, initialSequence, initialStake, onComplete,
               <span className="text-gray-400 text-xs">Progress</span>
             </div>
             <span className="text-white text-sm">{completedCount}/{sequence.length}</span>
-          </div>
-        </div>
-
-        {/* Adrenaline Meter */}
-        <div className="pt-3 border-t border-gray-700">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-1">
-              <Zap className="w-3 h-3 text-yellow-400" />
-              <span className="text-gray-400 text-xs">Adrenaline</span>
-            </div>
-            <span className="text-yellow-400 text-xs">{adrenalineLevel}%</span>
-          </div>
-          <div className="w-full bg-gray-700 rounded-full h-2">
-            <div 
-              className="bg-gradient-to-r from-yellow-400 to-orange-500 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${adrenalineLevel}%` }}
-            />
           </div>
         </div>
       </div>
@@ -474,7 +495,7 @@ export function LiveWatching({ match, initialSequence, initialStake, onComplete,
         >
           <div className="flex items-center justify-center gap-2">
             <Trophy className="w-5 h-5" />
-            <span>Cash Out Now (${currentWinnings.toFixed(2)})</span>
+            <span>Cash Out Now (€{currentWinnings.toFixed(2)})</span>
           </div>
         </Button>
       )}
@@ -504,32 +525,30 @@ export function LiveWatching({ match, initialSequence, initialStake, onComplete,
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              {OUTCOME_TEMPLATES.map(template => {
-                const processedDescription = template.description
-                  .replace('{player1}', match.player1)
-                  .replace('{player2}', match.player2);
-                
-                return (
-                  <button
-                    key={template.id}
-                    onClick={() => addSelection(template)}
-                    className="bg-[#1a2f4d] hover:bg-[#243a5c] text-white p-3 rounded-xl text-sm text-left transition-all active:scale-95"
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <p className="flex-1 pr-2">{processedDescription}</p>
-                      <span className="text-lg">{template.icon}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-cyan-400 text-xs">{template.odds.toFixed(2)}x</span>
-                      <span className="text-gray-500 text-xs">{template.timeLimit}s</span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+            <OutcomeList
+              match={match}
+              outcomeTemplates={OUTCOME_TEMPLATES}
+              onOutcomeClick={handleOutcomeClick}
+              showCategories={true}
+            />
           </div>
         </div>
+      )}
+
+      {/* Player Selector */}
+      {showPlayerSelector && pendingTemplate && (
+        <PlayerSelector
+          isOpen={showPlayerSelector}
+          onClose={() => {
+            setShowPlayerSelector(false);
+            setPendingTemplate(null);
+          }}
+          onSelectPlayer={handlePlayerSelect}
+          team1Name={match.player1}
+          team2Name={match.player2}
+          bothTeams={pendingTemplate.playerSelectionTeam === 'both'}
+          teamFilter={pendingTemplate.playerSelectionTeam !== 'both' ? pendingTemplate.playerSelectionTeam : undefined}
+        />
       )}
     </div>
   );

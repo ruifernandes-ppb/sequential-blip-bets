@@ -1,8 +1,11 @@
 import { useState } from 'react';
-import { ArrowLeft, Plus, Trash2, CheckCircle, AlertCircle, GripVertical, Send, MessageCircle, TrendingUp, Users, UserPlus } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, CheckCircle, AlertCircle, GripVertical, Send, MessageCircle, TrendingUp, Users, UserPlus, Clock, Receipt } from 'lucide-react';
 import { Match, SequenceOutcome } from '../App';
 import { Button } from './ui/button';
 import { PlayerSelector } from './PlayerSelector';
+import { OutcomeList } from './OutcomeList';
+import { toast } from "sonner@2.0.3";
+import { useBets } from '../contexts/BetContext';
 
 interface SequenceBuilderProps {
   match: Match;
@@ -147,6 +150,17 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
   const [suggestionTab, setSuggestionTab] = useState<'popular' | 'friends'>('popular');
   const [showPlayerSelector, setShowPlayerSelector] = useState(false);
   const [pendingTemplate, setPendingTemplate] = useState<OutcomeTemplate | null>(null);
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
+
+  const { placedBets } = useBets();
+  const activeBets = placedBets.filter(bet => bet.status === 'pending' || bet.status === 'live');
+
+  const toggleCategory = (category: string) => {
+    setExpandedCategories(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }));
+  };
 
   const handleOutcomeClick = (template: OutcomeTemplate) => {
     if (template.allowPlayerSelection) {
@@ -183,6 +197,12 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
     };
     setSelectedOutcomes([...selectedOutcomes, newOutcome]);
     setShowSuggestions(false);
+    
+    // Show success feedback
+    toast.success(`Added: ${processedDescription}`, {
+      duration: 2000,
+      icon: template.icon,
+    });
   };
 
   const removeOutcome = (id: string) => {
@@ -325,7 +345,7 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
   };
 
   return (
-    <div className="min-h-screen flex flex-col p-4 max-w-md mx-auto">
+    <div className="min-h-screen flex flex-col p-4 max-w-md mx-auto pb-28">
       <div className="flex items-center gap-3 mb-6 mt-2">
         <button onClick={onBack} className="text-white p-2">
           <ArrowLeft className="w-5 h-5" />
@@ -335,6 +355,52 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
           <p className="text-gray-400 text-sm">{match.player1} vs {match.player2}</p>
         </div>
       </div>
+
+      {/* My Placed Bets */}
+      {activeBets.length > 0 && (
+        <div className="mb-4 bg-gradient-to-br from-[#1a2f4d] to-[#0f1f3d] rounded-2xl p-4 border border-cyan-500/30">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-white flex items-center gap-2">
+              <Receipt className="w-4 h-4 text-cyan-400" />
+              My Placed Bets ({activeBets.length})
+            </h3>
+            <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse" />
+          </div>
+          
+          <div className="space-y-2">
+            {activeBets.slice(0, 2).map((bet) => (
+              <div
+                key={bet.id}
+                className="bg-[#0f1f3d] rounded-xl p-3"
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <p className="text-white text-sm flex-1">{bet.matchName}</p>
+                  <span className={`text-xs px-2 py-0.5 rounded-full ml-2 ${
+                    bet.status === 'live' ? 'bg-red-500/20 text-red-400' :
+                    'bg-yellow-500/20 text-yellow-400'
+                  }`}>
+                    {bet.status.toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <p className="text-gray-400 text-xs">{bet.sequence.length} outcomes</p>
+                  <p className="text-cyan-400 text-xs">
+                    {new Date(bet.timestamp).toLocaleDateString('en-GB', {
+                      day: 'numeric',
+                      month: 'short',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+          {activeBets.length > 2 && (
+            <p className="text-cyan-400 text-xs mt-2 text-center">+{activeBets.length - 2} more active</p>
+          )}
+        </div>
+      )}
 
       {selectedOutcomes.length > 0 && (
         <div className="bg-gradient-to-br from-[#1a2f4d] to-[#0f1f3d] rounded-2xl p-4 mb-4 border border-cyan-500/30">
@@ -379,7 +445,7 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
           <div className="pt-3 border-t border-gray-700">
             <div className="flex items-center justify-between mb-2">
               <span className="text-gray-400">Individual Bets</span>
-              <span className="text-cyan-400">{selectedOutcomes.length} × $10.00</span>
+              <span className="text-cyan-400">{selectedOutcomes.length} × €10.00</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-gray-400">Streak Bonus (all correct)</span>
@@ -580,63 +646,89 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
           Add to Timeline
         </h3>
 
-        {Object.entries(groupedOptions).map(([category, options]) => (
-          <div key={category} className="mb-4">
-            <p className="text-gray-400 text-sm mb-2">{categoryLabels[category as keyof typeof categoryLabels]}</p>
-            <div className="grid grid-cols-2 gap-2">
-              {options.map(template => {
-                const processedDescription = template.description
-                  .replace('{player1}', match.player1)
-                  .replace('{player2}', match.player2);
-                
-                return (
-                  <button
-                    key={template.id}
-                    onClick={() => handleOutcomeClick(template)}
-                    className={`bg-[#1a2f4d] hover:bg-[#243a5c] text-white p-3 rounded-xl text-sm text-left transition-all active:scale-95 relative ${
-                      template.allowPlayerSelection ? 'border-2 border-purple-500/40' : ''
-                    }`}
-                  >
-                    {template.allowPlayerSelection && (
-                      <div className="absolute top-1 right-1 bg-purple-500 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-0.5">
-                        <UserPlus className="w-3 h-3" />
+        {Object.entries(groupedOptions).map(([category, options]) => {
+          const isExpanded = expandedCategories[category];
+          const displayOptions = isExpanded ? options : options.slice(0, 4);
+          const hasMore = options.length > 4;
+
+          return (
+            <div key={category} className="mb-4">
+              <p className="text-gray-400 text-sm mb-2">{categoryLabels[category as keyof typeof categoryLabels]}</p>
+              <div className="grid grid-cols-2 gap-2">
+                {displayOptions.map(template => {
+                  const processedDescription = template.description
+                    .replace('{player1}', match.player1)
+                    .replace('{player2}', match.player2);
+                  
+                  return (
+                    <button
+                      key={template.id}
+                      onClick={() => handleOutcomeClick(template)}
+                      className={`bg-[#1a2f4d] hover:bg-[#243a5c] text-white p-3 rounded-xl text-sm text-left transition-all active:scale-95 relative ${
+                        template.allowPlayerSelection ? 'border-2 border-purple-500/40' : ''
+                      }`}
+                    >
+                      {template.allowPlayerSelection && (
+                        <div className="absolute top-1 right-1 bg-purple-500 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                          <UserPlus className="w-3 h-3" />
+                        </div>
+                      )}
+                      <div className="flex items-start justify-between mb-2">
+                        <p className="flex-1 pr-2">{processedDescription}</p>
+                        <span className="text-lg">{template.icon}</span>
                       </div>
-                    )}
-                    <div className="flex items-start justify-between mb-2">
-                      <p className="flex-1 pr-2">{processedDescription}</p>
-                      <span className="text-lg">{template.icon}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-cyan-400 text-xs">{template.odds.toFixed(2)}x</span>
-                      <span className="text-gray-500 text-xs">{template.timeLimit}s</span>
-                    </div>
-                    {template.allowPlayerSelection && (
-                      <p className="text-purple-400 text-xs mt-1">Choose player</p>
-                    )}
-                  </button>
-                );
-              })}
+                      <div className="flex items-center justify-between">
+                        <span className="text-cyan-400 text-xs">{template.odds.toFixed(2)}x</span>
+                        <span className="text-gray-500 text-xs">{template.timeLimit}s</span>
+                      </div>
+                      {template.allowPlayerSelection && (
+                        <p className="text-purple-400 text-xs mt-1">Choose player</p>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              {hasMore && (
+                <button
+                  onClick={() => toggleCategory(category)}
+                  className="w-full mt-2 text-cyan-400 text-sm hover:text-cyan-300 transition-colors"
+                >
+                  {isExpanded ? 'Show less' : `Show more (${options.length - 4} more)`}
+                </button>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {selectedOutcomes.length > 0 && (
-        <Button
-          onClick={() => onComplete(selectedOutcomes)}
-          className="w-full bg-gradient-to-r from-cyan-400 to-green-400 hover:from-cyan-500 hover:to-green-500 text-[#0a1628] py-6 rounded-2xl mt-4 shadow-lg shadow-cyan-500/50"
-        >
-          <div className="flex items-center justify-center gap-2">
-            <CheckCircle className="w-5 h-5" />
-            <span>Watch Timeline Live (${potentialWinnings.toFixed(2)} max)</span>
-          </div>
-        </Button>
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[#0a1628] via-[#0a1628] to-transparent max-w-md mx-auto">
+          <Button
+            onClick={() => onComplete(selectedOutcomes)}
+            disabled={selectedOutcomes.length < 3}
+            className={`w-full py-6 rounded-2xl shadow-lg ${
+              selectedOutcomes.length >= 3
+                ? 'bg-gradient-to-r from-cyan-400 to-green-400 hover:from-cyan-500 hover:to-green-500 text-[#0a1628] shadow-cyan-500/50'
+                : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+            }`}
+          >
+            <div className="flex items-center justify-center gap-2">
+              <CheckCircle className="w-5 h-5" />
+              <span>
+                {selectedOutcomes.length < 3
+                  ? `Add ${3 - selectedOutcomes.length} more outcome${3 - selectedOutcomes.length !== 1 ? 's' : ''}`
+                  : `Place Bet (€${potentialWinnings.toFixed(2)} max)`
+                }
+              </span>
+            </div>
+          </Button>
+        </div>
       )}
 
       {selectedOutcomes.length === 0 && (
         <div className="flex items-center justify-center gap-2 text-gray-400 text-sm py-6">
           <AlertCircle className="w-4 h-4" />
-          <span>Add at least one outcome to continue</span>
+          <span>Add at least 3 outcomes to continue</span>
         </div>
       )}
 
