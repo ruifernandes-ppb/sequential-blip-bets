@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { ArrowLeft, Plus, Trash2, Sparkles, CheckCircle, AlertCircle, GripVertical, Send, MessageCircle, TrendingUp, Users } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, CheckCircle, AlertCircle, GripVertical, Send, MessageCircle, TrendingUp, Users, UserPlus } from 'lucide-react';
 import { Match, SequenceOutcome } from '../App';
 import { Button } from './ui/button';
+import { PlayerSelector } from './PlayerSelector';
 
 interface SequenceBuilderProps {
   match: Match;
@@ -16,22 +17,35 @@ interface OutcomeTemplate {
   odds: number;
   icon: string;
   timeLimit: number;
+  allowPlayerSelection?: boolean;
+  playerSelectionTeam?: 'player1' | 'player2' | 'both';
+}
+
+interface Player {
+  id: string;
+  name: string;
+  number: number;
+  position: string;
+  team: 'player1' | 'player2';
 }
 
 const OUTCOME_TEMPLATES: OutcomeTemplate[] = [
-  // Goal outcomes
+  // Goal outcomes - with player selection
+  { id: 'specific-player-scores', category: 'game', description: '{playerName} scores next goal', odds: 1.48, icon: '⚽', timeLimit: 15, allowPlayerSelection: true, playerSelectionTeam: 'both' },
   { id: 'player1-scores', category: 'game', description: '{player1} scores next goal', odds: 1.42, icon: '⚽', timeLimit: 15 },
   { id: 'player2-scores', category: 'game', description: '{player2} scores next goal', odds: 1.45, icon: '⚽', timeLimit: 15 },
   { id: 'no-goal-10min', category: 'game', description: 'No goals in next 10 minutes', odds: 1.28, icon: '🚫', timeLimit: 10 },
   { id: 'both-teams-score', category: 'game', description: 'Both teams score next', odds: 1.50, icon: '⚽⚽', timeLimit: 20 },
   
-  // Shot outcomes
+  // Shot outcomes - with player selection for some
+  { id: 'specific-player-shot', category: 'point', description: '{playerName} shot on target', odds: 1.40, icon: '🎯', timeLimit: 5, allowPlayerSelection: true, playerSelectionTeam: 'both' },
   { id: 'shot-on-target', category: 'point', description: 'Shot on target next minute', odds: 1.32, icon: '🎯', timeLimit: 5 },
   { id: 'player1-corner', category: 'point', description: '{player1} wins corner', odds: 1.35, icon: '🚩', timeLimit: 10 },
   { id: 'player2-corner', category: 'point', description: '{player2} wins corner', odds: 1.38, icon: '🚩', timeLimit: 10 },
   { id: 'offside-call', category: 'point', description: 'Offside in next 5 minutes', odds: 1.30, icon: '🏴', timeLimit: 5 },
   
-  // Card outcomes
+  // Card outcomes - with player selection
+  { id: 'specific-player-yellow', category: 'serve', description: '{playerName} gets yellow card', odds: 1.50, icon: '🟨', timeLimit: 12, allowPlayerSelection: true, playerSelectionTeam: 'both' },
   { id: 'yellow-card', category: 'serve', description: 'Yellow card shown', odds: 1.40, icon: '🟨', timeLimit: 10 },
   { id: 'player1-yellow', category: 'serve', description: '{player1} player gets yellow', odds: 1.45, icon: '🟨', timeLimit: 12 },
   { id: 'player2-yellow', category: 'serve', description: '{player2} player gets yellow', odds: 1.48, icon: '🟨', timeLimit: 12 },
@@ -45,24 +59,6 @@ const OUTCOME_TEMPLATES: OutcomeTemplate[] = [
   { id: 'free-kick', category: 'rally', description: 'Free kick awarded', odds: 1.25, icon: '🦶', timeLimit: 8 },
   { id: 'substitution', category: 'rally', description: 'Substitution made', odds: 1.30, icon: '🔄', timeLimit: 15 },
   { id: 'penalty-appeal', category: 'rally', description: 'Penalty appeal', odds: 1.50, icon: '🙋', timeLimit: 10 },
-];
-
-const SUGGESTED_SEQUENCES = [
-  {
-    name: 'The Comeback',
-    description: 'Break serve and hold momentum',
-    outcomes: ['player1-breaks', 'player2-holds', 'break-back']
-  },
-  {
-    name: 'Serve Dominance',
-    description: 'Clean service games',
-    outcomes: ['ace', 'player1-holds', 'love-game']
-  },
-  {
-    name: 'Battle of Nerves',
-    description: 'Pressure points decide it',
-    outcomes: ['game-to-deuce', 'break-point', 'double-fault']
-  }
 ];
 
 interface PopularSequence {
@@ -149,11 +145,33 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
   const [searchResults, setSearchResults] = useState<OutcomeTemplate[]>([]);
   const [showChatResults, setShowChatResults] = useState(false);
   const [suggestionTab, setSuggestionTab] = useState<'popular' | 'friends'>('popular');
+  const [showPlayerSelector, setShowPlayerSelector] = useState(false);
+  const [pendingTemplate, setPendingTemplate] = useState<OutcomeTemplate | null>(null);
 
-  const addOutcome = (template: OutcomeTemplate) => {
-    const processedDescription = template.description
+  const handleOutcomeClick = (template: OutcomeTemplate) => {
+    if (template.allowPlayerSelection) {
+      setPendingTemplate(template);
+      setShowPlayerSelector(true);
+    } else {
+      addOutcome(template, null);
+    }
+  };
+
+  const handlePlayerSelect = (player: Player) => {
+    if (pendingTemplate) {
+      addOutcome(pendingTemplate, player);
+      setPendingTemplate(null);
+    }
+  };
+
+  const addOutcome = (template: OutcomeTemplate, player: Player | null) => {
+    let processedDescription = template.description
       .replace('{player1}', match.player1)
       .replace('{player2}', match.player2);
+    
+    if (player) {
+      processedDescription = processedDescription.replace('{playerName}', player.name);
+    }
     
     const newOutcome: SequenceOutcome = {
       id: `${template.id}-${Date.now()}`,
@@ -219,29 +237,22 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
     e.preventDefault();
     if (!chatInput.trim()) return;
 
-    // Natural language matching algorithm
     const searchLower = chatInput.toLowerCase();
     const keywords = searchLower.split(' ').filter(word => word.length > 2);
     
-    // Score each template based on relevance
     const scoredTemplates = OUTCOME_TEMPLATES.map(template => {
       let score = 0;
       const descLower = template.description.toLowerCase();
       const categoryLower = template.category.toLowerCase();
       
-      // Direct phrase match (highest priority)
-      if (descLower.includes(searchLower)) {
-        score += 100;
-      }
+      if (descLower.includes(searchLower)) score += 100;
       
-      // Keyword matching
       keywords.forEach(keyword => {
         if (descLower.includes(keyword)) score += 20;
         if (categoryLower.includes(keyword)) score += 15;
         if (template.id.includes(keyword)) score += 10;
       });
       
-      // Player name matching
       if (searchLower.includes('portugal') || searchLower.includes(match.player1.toLowerCase())) {
         if (template.id.includes('player1')) score += 30;
       }
@@ -249,7 +260,6 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
         if (template.id.includes('player2')) score += 30;
       }
       
-      // Specific term matching
       const termMatches: Record<string, string[]> = {
         'goal': ['scores', 'goal'],
         'score': ['scores'],
@@ -277,7 +287,6 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
       return { template, score };
     });
     
-    // Sort by score and get top 6 results
     const topResults = scoredTemplates
       .filter(({ score }) => score > 0)
       .sort((a, b) => b.score - a.score)
@@ -299,7 +308,6 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
     rally: '🦶'
   };
 
-  // Group options by category
   const groupedOptions = OUTCOME_TEMPLATES.reduce((acc, option) => {
     if (!acc[option.category]) {
       acc[option.category] = [];
@@ -318,7 +326,6 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
 
   return (
     <div className="min-h-screen flex flex-col p-4 max-w-md mx-auto">
-      {/* Header */}
       <div className="flex items-center gap-3 mb-6 mt-2">
         <button onClick={onBack} className="text-white p-2">
           <ArrowLeft className="w-5 h-5" />
@@ -329,7 +336,6 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
         </div>
       </div>
 
-      {/* Selected Sequence Timeline */}
       {selectedOutcomes.length > 0 && (
         <div className="bg-gradient-to-br from-[#1a2f4d] to-[#0f1f3d] rounded-2xl p-4 mb-4 border border-cyan-500/30">
           <div className="flex items-center justify-between mb-3">
@@ -370,7 +376,6 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
             ))}
           </div>
 
-          {/* Total Odds */}
           <div className="pt-3 border-t border-gray-700">
             <div className="flex items-center justify-between mb-2">
               <span className="text-gray-400">Individual Bets</span>
@@ -384,10 +389,8 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
         </div>
       )}
 
-      {/* Suggested Sequences */}
       {showSuggestions && selectedOutcomes.length === 0 && (
         <div className="mb-4">
-          {/* Tabs */}
           <div className="flex gap-2 mb-3">
             <button
               onClick={() => setSuggestionTab('popular')}
@@ -413,7 +416,6 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
             </button>
           </div>
 
-          {/* Popular Sequences */}
           {suggestionTab === 'popular' && (
             <div className="space-y-2">
               {POPULAR_SEQUENCES.map((seq, index) => (
@@ -450,7 +452,6 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
             </div>
           )}
 
-          {/* Friends Sequences */}
           {suggestionTab === 'friends' && (
             <div className="space-y-2">
               {FRIEND_SEQUENCES.map((seq, index) => (
@@ -502,7 +503,6 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
         </div>
       )}
 
-      {/* AI Chat Search */}
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-2">
           <MessageCircle className="w-4 h-4 text-cyan-400" />
@@ -525,7 +525,6 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
           </button>
         </form>
 
-        {/* Search Results */}
         {showChatResults && searchResults.length > 0 && (
           <div className="mt-3 bg-[#0f1f3d] border border-cyan-500/30 rounded-xl p-3">
             <div className="flex items-center justify-between mb-2">
@@ -547,7 +546,7 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
                   <button
                     key={template.id}
                     onClick={() => {
-                      addOutcome(template);
+                      handleOutcomeClick(template);
                       setChatInput('');
                       setShowChatResults(false);
                     }}
@@ -575,7 +574,6 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
         )}
       </div>
 
-      {/* Available Outcomes */}
       <div className="flex-1 overflow-y-auto">
         <h3 className="text-white mb-3 flex items-center gap-2">
           <Plus className="w-4 h-4 text-cyan-400" />
@@ -594,9 +592,16 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
                 return (
                   <button
                     key={template.id}
-                    onClick={() => addOutcome(template)}
-                    className="bg-[#1a2f4d] hover:bg-[#243a5c] text-white p-3 rounded-xl text-sm text-left transition-all active:scale-95"
+                    onClick={() => handleOutcomeClick(template)}
+                    className={`bg-[#1a2f4d] hover:bg-[#243a5c] text-white p-3 rounded-xl text-sm text-left transition-all active:scale-95 relative ${
+                      template.allowPlayerSelection ? 'border-2 border-purple-500/40' : ''
+                    }`}
                   >
+                    {template.allowPlayerSelection && (
+                      <div className="absolute top-1 right-1 bg-purple-500 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                        <UserPlus className="w-3 h-3" />
+                      </div>
+                    )}
                     <div className="flex items-start justify-between mb-2">
                       <p className="flex-1 pr-2">{processedDescription}</p>
                       <span className="text-lg">{template.icon}</span>
@@ -605,6 +610,9 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
                       <span className="text-cyan-400 text-xs">{template.odds.toFixed(2)}x</span>
                       <span className="text-gray-500 text-xs">{template.timeLimit}s</span>
                     </div>
+                    {template.allowPlayerSelection && (
+                      <p className="text-purple-400 text-xs mt-1">Choose player</p>
+                    )}
                   </button>
                 );
               })}
@@ -613,7 +621,6 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
         ))}
       </div>
 
-      {/* Start Button */}
       {selectedOutcomes.length > 0 && (
         <Button
           onClick={() => onComplete(selectedOutcomes)}
@@ -631,6 +638,21 @@ export function SequenceBuilder({ match, onComplete, onBack }: SequenceBuilderPr
           <AlertCircle className="w-4 h-4" />
           <span>Add at least one outcome to continue</span>
         </div>
+      )}
+
+      {showPlayerSelector && pendingTemplate && (
+        <PlayerSelector
+          isOpen={showPlayerSelector}
+          onClose={() => {
+            setShowPlayerSelector(false);
+            setPendingTemplate(null);
+          }}
+          onSelectPlayer={handlePlayerSelect}
+          team1Name={match.player1}
+          team2Name={match.player2}
+          bothTeams={pendingTemplate.playerSelectionTeam === 'both'}
+          teamFilter={pendingTemplate.playerSelectionTeam !== 'both' ? pendingTemplate.playerSelectionTeam : undefined}
+        />
       )}
     </div>
   );
