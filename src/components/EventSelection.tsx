@@ -1,6 +1,6 @@
-import { Trophy, Clock, ArrowRight, Users, Target } from 'lucide-react';
-import { Match } from '../App';
-import { Button } from './ui/button';
+import { Trophy, Clock, ArrowRight, Users, Target } from "lucide-react";
+import { Match } from "../App";
+import { Button } from "./ui/button";
 
 interface EventSelectionProps {
   onMatchSelect: (match: Match) => void;
@@ -11,82 +11,86 @@ interface EventSelectionProps {
 const LIVE_MATCHES: Match[] = [
   {
     id: 1,
-    player1: 'Portugal',
-    player2: 'Ireland',
+    player1: "Portugal",
+    player2: "Ireland",
     player1Sets: 0,
     player2Sets: 0,
     player1Games: 0,
     player2Games: 0,
-    player1Points: '0',
-    player2Points: '0',
+    player1Points: "0",
+    player2Points: "0",
     currentSet: 1,
-    tournament: 'World Cup Qualification',
+    tournament: "World Cup Qualification",
     isLive: true,
-    servingPlayer: 1
+    servingPlayer: 1,
   },
   {
     id: 2,
-    player1: 'Portugal',
-    player2: 'Armenia',
+    player1: "Portugal",
+    player2: "Armenia",
     player1Sets: 1,
     player2Sets: 0,
     player1Games: 0,
     player2Games: 0,
-    player1Points: '0',
-    player2Points: '0',
+    player1Points: "0",
+    player2Points: "0",
     currentSet: 2,
-    tournament: 'World Cup Qualification',
+    tournament: "World Cup Qualification",
     isLive: true,
-    servingPlayer: 1
+    servingPlayer: 1,
   },
   {
     id: 3,
-    player1: 'Spain',
-    player2: 'France',
+    player1: "Spain",
+    player2: "France",
     player1Sets: 0,
     player2Sets: 1,
     player1Games: 0,
     player2Games: 0,
-    player1Points: '0',
-    player2Points: '0',
+    player1Points: "0",
+    player2Points: "0",
     currentSet: 2,
-    tournament: 'UEFA Nations League',
+    tournament: "UEFA Nations League",
     isLive: true,
-    servingPlayer: 2
+    servingPlayer: 2,
   },
   {
     id: 4,
-    player1: 'England',
-    player2: 'Germany',
+    player1: "England",
+    player2: "Germany",
     player1Sets: 1,
     player2Sets: 1,
     player1Games: 0,
     player2Games: 0,
-    player1Points: '0',
-    player2Points: '0',
+    player1Points: "0",
+    player2Points: "0",
     currentSet: 3,
-    tournament: 'International Friendly',
+    tournament: "International Friendly",
     isLive: true,
-    servingPlayer: 1
+    servingPlayer: 1,
   },
   {
     id: 5,
-    player1: 'Brazil',
-    player2: 'Argentina',
-    player1Sets: 0,
-    player2Sets: 0,
+    player1: "Portugal",
+    player2: "England",
+    player1Sets: 2,
+    player2Sets: 2,
     player1Games: 0,
     player2Games: 0,
-    player1Points: '0',
-    player2Points: '0',
+    player1Points: "0",
+    player2Points: "0",
     currentSet: 1,
-    tournament: 'Copa America',
+    tournament: "UEFA Euro 2004",
     isLive: true,
-    servingPlayer: 2
-  }
+    servingPlayer: 2,
+  },
 ];
 
-export function EventSelection({ onMatchSelect, onViewFriendsStats, onPenaltyShootout }: EventSelectionProps) {
+export function EventSelection({
+  onMatchSelect,
+  onViewFriendsStats,
+  onPenaltyShootout,
+}: EventSelectionProps) {
   return (
     <div className="min-h-screen flex flex-col p-4 max-w-md mx-auto">
       {/* Header */}
@@ -107,17 +111,21 @@ export function EventSelection({ onMatchSelect, onViewFriendsStats, onPenaltySho
           >
             {/* Animated background */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse" />
-            
+
             <div className="relative">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <Trophy className="w-6 h-6 text-yellow-200" />
                 <span className="text-white font-bold">SPECIAL EVENT</span>
                 <Trophy className="w-6 h-6 text-yellow-200" />
               </div>
-              
-              <h2 className="text-white text-xl mb-2">🏆 2026 World Cup Final 🏆</h2>
-              <p className="text-yellow-100 text-sm mb-3">Penalty Shootout Challenge</p>
-              
+
+              <h2 className="text-white text-xl mb-2">
+                🏆 UEFA Euro 2004 Quarter-final 🏆
+              </h2>
+              <p className="text-yellow-100 text-sm mb-3">
+                Penalty Shootout Challenge
+              </p>
+
               <div className="flex items-center justify-center gap-4 mb-3">
                 <div className="text-center">
                   <div className="text-2xl mb-1">🇵🇹</div>
@@ -128,11 +136,11 @@ export function EventSelection({ onMatchSelect, onViewFriendsStats, onPenaltySho
                   <p className="text-yellow-200 text-xs">VS</p>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl mb-1">🇦🇷</div>
-                  <p className="text-white text-xs">Argentina</p>
+                  <div className="text-2xl mb-1">🏴󠁧󠁢󠁥󠁮󠁧󠁿</div>
+                  <p className="text-white text-xs">England</p>
                 </div>
               </div>
-              
+
               <div className="bg-black/20 rounded-lg p-3">
                 <p className="text-yellow-100 text-xs mb-2">
                   ⚽ Predict each penalty: Score or Miss
@@ -141,12 +149,14 @@ export function EventSelection({ onMatchSelect, onViewFriendsStats, onPenaltySho
                   ⏱️ 10 seconds per decision
                 </p>
                 <p className="text-yellow-100 text-xs">
-                  💰 1.35x odds per correct prediction
+                  💰 Win 25x your bet if you predict all correctly
                 </p>
               </div>
-              
+
               <div className="mt-3 flex items-center justify-center gap-2">
-                <span className="text-yellow-200 text-sm font-bold">Start Shootout</span>
+                <span className="text-yellow-200 text-sm font-bold">
+                  Start Shootout
+                </span>
                 <ArrowRight className="w-4 h-4 text-yellow-200" />
               </div>
             </div>
@@ -160,7 +170,9 @@ export function EventSelection({ onMatchSelect, onViewFriendsStats, onPenaltySho
           <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
           <span className="text-white text-sm">LIVE NOW</span>
         </div>
-        <span className="text-gray-400 text-sm">{LIVE_MATCHES.length} matches</span>
+        <span className="text-gray-400 text-sm">
+          {LIVE_MATCHES.length} matches
+        </span>
       </div>
 
       {/* Match List */}
@@ -176,7 +188,9 @@ export function EventSelection({ onMatchSelect, onViewFriendsStats, onPenaltySho
               <span className="text-gray-400 text-xs">{match.tournament}</span>
               <div className="flex items-center gap-1 text-orange-400">
                 <Clock className="w-3 h-3" />
-                <span className="text-xs">{match.currentSet === 1 ? '1st Half' : '2nd Half'}</span>
+                <span className="text-xs">
+                  {match.currentSet === 1 ? "1st Half" : "2nd Half"}
+                </span>
               </div>
             </div>
 
@@ -204,7 +218,8 @@ export function EventSelection({ onMatchSelect, onViewFriendsStats, onPenaltySho
       {/* Info Footer */}
       <div className="mt-6 bg-[#1a2f4d]/50 rounded-xl p-4 border border-cyan-500/20">
         <p className="text-gray-300 text-sm text-center">
-          Create your storyline with sequential outcomes. Each event adds tension and potential reward.
+          Create your storyline with sequential outcomes. Each event adds
+          tension and potential reward.
         </p>
       </div>
 
