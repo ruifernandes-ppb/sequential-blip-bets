@@ -1,24 +1,24 @@
-import { useState } from "react";
-import { EventSelection } from "./components/EventSelection";
-import { SequenceBuilder } from "./components/SequenceBuilder";
-import { LiveWatching } from "./components/LiveWatching";
-import { ResultScreen } from "./components/ResultScreen";
-import { FriendsStats } from "./components/FriendsStats";
-import { PenaltyShootout } from "./components/PenaltyShootout";
-import { PenaltyResult } from "./components/PenaltyResult";
-import { MyBets } from "./components/MyBets";
-import { BetProvider } from "./contexts/BetContext";
-import { Toaster } from "./components/ui/sonner";
+import { useState } from 'react';
+import { EventSelection } from './components/EventSelection';
+import { SequenceBuilder } from './components/SequenceBuilder';
+import { LiveWatching } from './components/LiveWatching';
+import { ResultScreen } from './components/ResultScreen';
+import { FriendsStats } from './components/FriendsStats';
+import { PenaltyShootout } from './components/PenaltyShootout';
+import { PenaltyResult } from './components/PenaltyResult';
+import { MyBets } from './components/MyBets';
+import { BetProvider } from './contexts/BetContext';
+import { Toaster } from './components/ui/sonner';
 
 export type GameScreen =
-  | "event-selection"
-  | "sequence-builder"
-  | "live-watching"
-  | "result"
-  | "friends-stats"
-  | "penalty-shootout"
-  | "penalty-result"
-  | "my-bets";
+  | 'event-selection'
+  | 'sequence-builder'
+  | 'live-watching'
+  | 'result'
+  | 'friends-stats'
+  | 'penalty-shootout'
+  | 'penalty-result'
+  | 'my-bets';
 
 export interface Match {
   id: number;
@@ -38,11 +38,18 @@ export interface Match {
 
 export interface SequenceOutcome {
   id: string;
-  category: "game" | "point" | "serve" | "break" | "rally";
+  category:
+    | 'team-goals'
+    | 'team-fouls'
+    | 'player-attacking'
+    | 'player-fouls'
+    | 'player-defensive'
+    | 'player-penalty'
+    | 'player-goalkeeper';
   description: string;
   odds: number;
   timeLimit: number;
-  status: "pending" | "checking" | "success" | "failed";
+  status: 'pending' | 'checking' | 'success' | 'failed';
   result?: boolean;
 }
 
@@ -55,48 +62,43 @@ export interface BetResult {
 
 export default function App() {
   const [currentScreen, setCurrentScreen] =
-    useState<GameScreen>("event-selection");
-  const [selectedMatch, setSelectedMatch] =
-    useState<Match | null>(null);
-  const [sequence, setSequence] = useState<SequenceOutcome[]>(
-    [],
-  );
+    useState<GameScreen>('event-selection');
+  const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
+  const [sequence, setSequence] = useState<SequenceOutcome[]>([]);
   const [betHistory, setBetHistory] = useState<BetResult[]>([]);
   const [currentWinnings, setCurrentWinnings] = useState(0);
   const [totalPoints, setTotalPoints] = useState(0);
   const [penaltyStats, setPenaltyStats] = useState({
     winnings: 0,
     correctPredictions: 0,
-    totalPenalties: 0
+    totalPenalties: 0,
   });
 
   const INITIAL_STAKE = 10;
 
   const handleMatchSelect = (match: Match) => {
     setSelectedMatch(match);
-    setCurrentScreen("sequence-builder");
+    setCurrentScreen('sequence-builder');
   };
 
-  const handleSequenceComplete = (
-    selectedSequence: SequenceOutcome[],
-  ) => {
+  const handleSequenceComplete = (selectedSequence: SequenceOutcome[]) => {
     setSequence(selectedSequence);
-    setCurrentScreen("live-watching");
+    setCurrentScreen('live-watching');
   };
 
   const handleWatchingComplete = (
     history: BetResult[],
     winnings: number,
-    points: number,
+    points: number
   ) => {
     setBetHistory(history);
     setCurrentWinnings(winnings);
     setTotalPoints(points);
-    setCurrentScreen("result");
+    setCurrentScreen('result');
   };
 
   const handlePlayAgain = () => {
-    setCurrentScreen("event-selection");
+    setCurrentScreen('event-selection');
     setSelectedMatch(null);
     setSequence([]);
     setBetHistory([]);
@@ -105,33 +107,36 @@ export default function App() {
     setPenaltyStats({ winnings: 0, correctPredictions: 0, totalPenalties: 0 });
   };
 
-  const handlePenaltyComplete = (winnings: number, correctPredictions: number, totalPenalties: number) => {
+  const handlePenaltyComplete = (
+    winnings: number,
+    correctPredictions: number,
+    totalPenalties: number
+  ) => {
     setPenaltyStats({ winnings, correctPredictions, totalPenalties });
-    setCurrentScreen("penalty-result");
+    setCurrentScreen('penalty-result');
   };
 
   return (
     <BetProvider>
-      <div className="min-h-screen bg-gradient-to-b from-[#1e3a5f] via-[#0f1f3d] to-[#0a1628]">
-        {currentScreen === "event-selection" && (
-          <EventSelection 
+      <div className='min-h-screen bg-gradient-to-b from-[#1e3a5f] via-[#0f1f3d] to-[#0a1628]'>
+        {currentScreen === 'event-selection' && (
+          <EventSelection
             onMatchSelect={handleMatchSelect}
-            onViewFriendsStats={() => setCurrentScreen("friends-stats")}
-            onPenaltyShootout={() => setCurrentScreen("penalty-shootout")}
-            onViewMyBets={() => setCurrentScreen("my-bets")}
+            onViewFriendsStats={() => setCurrentScreen('friends-stats')}
+            onPenaltyShootout={() => setCurrentScreen('penalty-shootout')}
+            onViewMyBets={() => setCurrentScreen('my-bets')}
           />
         )}
 
-        {currentScreen === "sequence-builder" &&
-          selectedMatch && (
-            <SequenceBuilder
-              match={selectedMatch}
-              onComplete={handleSequenceComplete}
-              onBack={() => setCurrentScreen("event-selection")}
-            />
-          )}
+        {currentScreen === 'sequence-builder' && selectedMatch && (
+          <SequenceBuilder
+            match={selectedMatch}
+            onComplete={handleSequenceComplete}
+            onBack={() => setCurrentScreen('event-selection')}
+          />
+        )}
 
-        {currentScreen === "live-watching" &&
+        {currentScreen === 'live-watching' &&
           selectedMatch &&
           sequence.length > 0 && (
             <LiveWatching
@@ -139,18 +144,16 @@ export default function App() {
               initialSequence={sequence}
               initialStake={INITIAL_STAKE}
               onComplete={handleWatchingComplete}
-              onBack={() => setCurrentScreen("sequence-builder")}
+              onBack={() => setCurrentScreen('sequence-builder')}
             />
           )}
 
-        {currentScreen === "result" && selectedMatch && (
+        {currentScreen === 'result' && selectedMatch && (
           <ResultScreen
             match={selectedMatch}
             betHistory={betHistory}
             totalPoints={totalPoints}
-            correctAnswers={
-              betHistory.filter((b) => b.correct).length
-            }
+            correctAnswers={betHistory.filter((b) => b.correct).length}
             onPlayAgain={handlePlayAgain}
             onGoToOverview={handlePlayAgain}
             finalWinnings={currentWinnings}
@@ -158,28 +161,28 @@ export default function App() {
           />
         )}
 
-        {currentScreen === "friends-stats" && (
-          <FriendsStats onBack={() => setCurrentScreen("event-selection")} />
+        {currentScreen === 'friends-stats' && (
+          <FriendsStats onBack={() => setCurrentScreen('event-selection')} />
         )}
 
-        {currentScreen === "my-bets" && (
-          <MyBets onBack={() => setCurrentScreen("event-selection")} />
+        {currentScreen === 'my-bets' && (
+          <MyBets onBack={() => setCurrentScreen('event-selection')} />
         )}
 
-        {currentScreen === "penalty-shootout" && (
+        {currentScreen === 'penalty-shootout' && (
           <PenaltyShootout
-            onBack={() => setCurrentScreen("event-selection")}
+            onBack={() => setCurrentScreen('event-selection')}
             onComplete={handlePenaltyComplete}
           />
         )}
 
-        {currentScreen === "penalty-result" && (
+        {currentScreen === 'penalty-result' && (
           <PenaltyResult
             finalWinnings={penaltyStats.winnings}
             correctPredictions={penaltyStats.correctPredictions}
             totalPenalties={penaltyStats.totalPenalties}
             initialStake={INITIAL_STAKE}
-            onPlayAgain={() => setCurrentScreen("penalty-shootout")}
+            onPlayAgain={() => setCurrentScreen('penalty-shootout')}
             onBackToMenu={handlePlayAgain}
           />
         )}
