@@ -19,9 +19,9 @@ interface EventSelectionProps {
 
 const LIVE_MATCHES: Match[] = [
   {
-    id: 1,
+    id: 'portugal-england-2004',
     player1: 'Portugal',
-    player2: 'Ireland',
+    player2: 'England',
     player1Sets: 0,
     player2Sets: 0,
     player1Games: 0,
@@ -29,14 +29,13 @@ const LIVE_MATCHES: Match[] = [
     player1Points: '0',
     player2Points: '0',
     currentSet: 1,
-    tournament: 'World Cup Qualification',
+    tournament: 'UEFA Euro 2004',
     isLive: true,
-    servingPlayer: 1,
   },
   {
     id: 2,
-    player1: 'Portugal',
-    player2: 'Armenia',
+    player1: 'France',
+    player2: 'Greece',
     player1Sets: 1,
     player2Sets: 0,
     player1Games: 0,
@@ -44,17 +43,16 @@ const LIVE_MATCHES: Match[] = [
     player1Points: '0',
     player2Points: '0',
     currentSet: 2,
-    tournament: 'World Cup Qualification',
+    tournament: 'UEFA Euro 2004',
     isLive: true,
-    servingPlayer: 1,
   },
 ];
 
 const UPCOMING_MATCHES: Match[] = [
   {
     id: 3,
-    player1: 'Spain',
-    player2: 'France',
+    player1: 'Sweden',
+    player2: 'Netherlands',
     player1Sets: 0,
     player2Sets: 0,
     player1Games: 0,
@@ -64,12 +62,11 @@ const UPCOMING_MATCHES: Match[] = [
     currentSet: 0,
     tournament: 'UEFA Nations League',
     isLive: false,
-    servingPlayer: 0,
   },
   {
     id: 4,
-    player1: 'England',
-    player2: 'Germany',
+    player1: 'Czech Republic',
+    player2: 'Denmark',
     player1Sets: 0,
     player2Sets: 0,
     player1Games: 0,
@@ -79,7 +76,6 @@ const UPCOMING_MATCHES: Match[] = [
     currentSet: 0,
     tournament: 'International Friendly',
     isLive: false,
-    servingPlayer: 0,
   },
 ];
 
@@ -123,7 +119,7 @@ export function EventSelection({
               </div>
 
               <h2 className='text-white text-xl mb-2'>
-                🏆 2026 World Cup Final 🏆
+                🏆 UEFA Euro 2004 Quarter-finals 🏆
               </h2>
               <p className='text-yellow-100 text-sm mb-3'>
                 Penalty Shootout Challenge
@@ -139,20 +135,14 @@ export function EventSelection({
                   <p className='text-yellow-200 text-xs'>VS</p>
                 </div>
                 <div className='text-center'>
-                  <div className='text-2xl mb-1'>🇦🇷</div>
-                  <p className='text-white text-xs'>Argentina</p>
+                  <div className='text-2xl mb-1'>🏴󠁧󠁢󠁥󠁮󠁧󠁿</div>
+                  <p className='text-white text-xs'>England</p>
                 </div>
               </div>
 
               <div className='bg-black/20 rounded-lg p-3'>
                 <p className='text-yellow-100 text-xs mb-2'>
                   ⚽ Predict each penalty: Score or Miss
-                </p>
-                <p className='text-yellow-100 text-xs mb-2'>
-                  ⏱️ 10 seconds per decision
-                </p>
-                <p className='text-yellow-100 text-xs'>
-                  💰 1.35x odds per correct prediction
                 </p>
               </div>
 

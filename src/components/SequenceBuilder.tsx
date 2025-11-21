@@ -791,6 +791,7 @@ export function SequenceBuilder({
 
       {showPlayerSelector && pendingTemplate && (
         <PlayerSelector
+          matchId={match.id}
           isOpen={showPlayerSelector}
           onClose={() => {
             setShowPlayerSelector(false);

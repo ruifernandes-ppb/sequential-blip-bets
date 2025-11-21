@@ -1,13 +1,6 @@
 import { useState } from 'react';
 import { X, Search, User } from 'lucide-react';
-
-interface Player {
-  id: string;
-  name: string;
-  number: number;
-  position: string;
-  team: 'player1' | 'player2';
-}
+import { getMatchPlayers, type Player } from '../fixtures/players';
 
 interface PlayerSelectorProps {
   isOpen: boolean;
@@ -18,39 +11,10 @@ interface PlayerSelectorProps {
   bothTeams?: boolean; // If true, show both teams, if false show only one team
   teamFilter?: 'player1' | 'player2';
   match?: any;
+  matchId?: string | number | null; // Optional match ID to load specific lineup
   team?: 'player1' | 'player2' | 'both';
   onSelect?: (player: Player) => void;
 }
-
-// Portugal squad
-const PORTUGAL_PLAYERS: Omit<Player, 'team'>[] = [
-  { id: 'pt-1', name: 'Diogo Costa', number: 1, position: 'GK' },
-  { id: 'pt-2', name: 'João Cancelo', number: 20, position: 'DEF' },
-  { id: 'pt-3', name: 'Rúben Dias', number: 3, position: 'DEF' },
-  { id: 'pt-4', name: 'Pepe', number: 2, position: 'DEF' },
-  { id: 'pt-5', name: 'Nuno Mendes', number: 19, position: 'DEF' },
-  { id: 'pt-6', name: 'Bruno Fernandes', number: 8, position: 'MID' },
-  { id: 'pt-7', name: 'Bernardo Silva', number: 10, position: 'MID' },
-  { id: 'pt-8', name: 'João Félix', number: 11, position: 'MID' },
-  { id: 'pt-9', name: 'Cristiano Ronaldo', number: 7, position: 'FWD' },
-  { id: 'pt-10', name: 'Rafael Leão', number: 17, position: 'FWD' },
-  { id: 'pt-11', name: 'Gonçalo Ramos', number: 9, position: 'FWD' },
-];
-
-// Generic opponent squad (adapts to opponent name)
-const OPPONENT_PLAYERS: Omit<Player, 'team'>[] = [
-  { id: 'op-1', name: 'Goalkeeper', number: 1, position: 'GK' },
-  { id: 'op-2', name: 'Right Back', number: 2, position: 'DEF' },
-  { id: 'op-3', name: 'Center Back', number: 3, position: 'DEF' },
-  { id: 'op-4', name: 'Center Back', number: 4, position: 'DEF' },
-  { id: 'op-5', name: 'Left Back', number: 5, position: 'DEF' },
-  { id: 'op-6', name: 'Midfielder', number: 6, position: 'MID' },
-  { id: 'op-7', name: 'Midfielder', number: 8, position: 'MID' },
-  { id: 'op-8', name: 'Winger', number: 10, position: 'MID' },
-  { id: 'op-9', name: 'Striker', number: 9, position: 'FWD' },
-  { id: 'op-10', name: 'Forward', number: 11, position: 'FWD' },
-  { id: 'op-11', name: 'Forward', number: 7, position: 'FWD' },
-];
 
 export function PlayerSelector({
   isOpen,
@@ -61,6 +25,7 @@ export function PlayerSelector({
   bothTeams = true,
   teamFilter,
   match,
+  matchId,
   team,
   onSelect,
 }: PlayerSelectorProps) {
@@ -69,14 +34,12 @@ export function PlayerSelector({
     'player1' | 'player2' | 'all'
   >(teamFilter || (bothTeams ? 'all' : 'player1'));
 
-  const team1Players: Player[] = PORTUGAL_PLAYERS.map((p) => ({
-    ...p,
-    team: 'player1' as const,
-  }));
-  const team2Players: Player[] = OPPONENT_PLAYERS.map((p) => ({
-    ...p,
-    team: 'player2' as const,
-  }));
+  // Load players dynamically based on matchId
+  const { team1Players, team2Players } = getMatchPlayers(
+    matchId || null,
+    team1Name,
+    team2Name
+  );
 
   let allPlayers = [...team1Players, ...team2Players];
 
@@ -224,7 +187,10 @@ export function PlayerSelector({
                           #{player.number}
                         </span>
                       </div>
-                      <p className='text-white text-sm mb-1'>{player.name}</p>
+                      <p className='text-white text-sm mb-1'>
+                        {player.name}
+                        {player.isCaptain && ' (C)'}
+                      </p>
                       <p className='text-gray-400 text-xs'>
                         {player.team === 'player1' ? team1Name : team2Name}
                       </p>

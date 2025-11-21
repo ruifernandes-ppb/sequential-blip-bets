@@ -21,7 +21,7 @@ export type GameScreen =
   | 'my-bets';
 
 export interface Match {
-  id: number;
+  id: number | string;
   player1: string;
   player2: string;
   player1Sets: number;
@@ -33,7 +33,6 @@ export interface Match {
   currentSet: number;
   tournament: string;
   isLive: boolean;
-  servingPlayer: 1 | 2;
 }
 
 export interface SequenceOutcome {
