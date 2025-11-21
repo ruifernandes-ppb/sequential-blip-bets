@@ -7,8 +7,8 @@ import { FriendsStats } from './components/FriendsStats';
 import { PenaltyShootout } from './components/PenaltyShootout';
 import { PenaltyResult } from './components/PenaltyResult';
 import { MyBets } from './components/MyBets';
-import { BetProvider } from './contexts/BetContext';
 import { Toaster } from './components/ui/sonner';
+import { useBetStore } from './stores/useBetStore';
 
 export type GameScreen =
   | 'event-selection'
@@ -68,11 +68,15 @@ export default function App() {
   const [betHistory, setBetHistory] = useState<BetResult[]>([]);
   const [currentWinnings, setCurrentWinnings] = useState(0);
   const [totalPoints, setTotalPoints] = useState(0);
+  const [currentBetId, setCurrentBetId] = useState<string | null>(null);
   const [penaltyStats, setPenaltyStats] = useState({
     winnings: 0,
     correctPredictions: 0,
     totalPenalties: 0,
   });
+
+  const addBet = useBetStore((state) => state.addBet);
+  const updateBet = useBetStore((state) => state.updateBet);
 
   const INITIAL_STAKE = 10;
 
@@ -83,6 +87,25 @@ export default function App() {
 
   const handleSequenceComplete = (selectedSequence: SequenceOutcome[]) => {
     setSequence(selectedSequence);
+
+    // Create and save the bet when starting to watch
+    if (selectedMatch) {
+      const betId = `bet-${Date.now()}-${Math.random()
+        .toString(36)
+        .substr(2, 9)}`;
+      setCurrentBetId(betId);
+
+      addBet({
+        id: betId,
+        matchId: selectedMatch.id,
+        matchName: `${selectedMatch.player1} vs ${selectedMatch.player2}`,
+        sequence: selectedSequence,
+        timestamp: Date.now(),
+        status: 'live',
+        initialStake: INITIAL_STAKE,
+      });
+    }
+
     setCurrentScreen('live-watching');
   };
 
@@ -94,6 +117,16 @@ export default function App() {
     setBetHistory(history);
     setCurrentWinnings(winnings);
     setTotalPoints(points);
+
+    // Update the bet with final results
+    if (currentBetId) {
+      updateBet(currentBetId, {
+        status: 'completed',
+        finalWinnings: winnings,
+        betHistory: history,
+      });
+    }
+
     setCurrentScreen('result');
   };
 
@@ -104,6 +137,7 @@ export default function App() {
     setBetHistory([]);
     setCurrentWinnings(0);
     setTotalPoints(0);
+    setCurrentBetId(null);
     setPenaltyStats({ winnings: 0, correctPredictions: 0, totalPenalties: 0 });
   };
 
@@ -117,77 +151,75 @@ export default function App() {
   };
 
   return (
-    <BetProvider>
-      <div className='min-h-screen bg-gradient-to-b from-[#1e3a5f] via-[#0f1f3d] to-[#0a1628]'>
-        {currentScreen === 'event-selection' && (
-          <EventSelection
-            onMatchSelect={handleMatchSelect}
-            onViewFriendsStats={() => setCurrentScreen('friends-stats')}
-            onPenaltyShootout={() => setCurrentScreen('penalty-shootout')}
-            onViewMyBets={() => setCurrentScreen('my-bets')}
-          />
-        )}
+    <div className='min-h-screen bg-gradient-to-b from-[#1e3a5f] via-[#0f1f3d] to-[#0a1628]'>
+      {currentScreen === 'event-selection' && (
+        <EventSelection
+          onMatchSelect={handleMatchSelect}
+          onViewFriendsStats={() => setCurrentScreen('friends-stats')}
+          onPenaltyShootout={() => setCurrentScreen('penalty-shootout')}
+          onViewMyBets={() => setCurrentScreen('my-bets')}
+        />
+      )}
 
-        {currentScreen === 'sequence-builder' && selectedMatch && (
-          <SequenceBuilder
+      {currentScreen === 'sequence-builder' && selectedMatch && (
+        <SequenceBuilder
+          match={selectedMatch}
+          onComplete={handleSequenceComplete}
+          onBack={() => setCurrentScreen('event-selection')}
+        />
+      )}
+
+      {currentScreen === 'live-watching' &&
+        selectedMatch &&
+        sequence.length > 0 && (
+          <LiveWatching
             match={selectedMatch}
-            onComplete={handleSequenceComplete}
-            onBack={() => setCurrentScreen('event-selection')}
-          />
-        )}
-
-        {currentScreen === 'live-watching' &&
-          selectedMatch &&
-          sequence.length > 0 && (
-            <LiveWatching
-              match={selectedMatch}
-              initialSequence={sequence}
-              initialStake={INITIAL_STAKE}
-              onComplete={handleWatchingComplete}
-              onBack={() => setCurrentScreen('sequence-builder')}
-            />
-          )}
-
-        {currentScreen === 'result' && selectedMatch && (
-          <ResultScreen
-            match={selectedMatch}
-            betHistory={betHistory}
-            totalPoints={totalPoints}
-            correctAnswers={betHistory.filter((b) => b.correct).length}
-            onPlayAgain={handlePlayAgain}
-            onGoToOverview={handlePlayAgain}
-            finalWinnings={currentWinnings}
+            initialSequence={sequence}
             initialStake={INITIAL_STAKE}
+            onComplete={handleWatchingComplete}
+            onBack={() => setCurrentScreen('sequence-builder')}
           />
         )}
 
-        {currentScreen === 'friends-stats' && (
-          <FriendsStats onBack={() => setCurrentScreen('event-selection')} />
-        )}
+      {currentScreen === 'result' && selectedMatch && (
+        <ResultScreen
+          match={selectedMatch}
+          betHistory={betHistory}
+          totalPoints={totalPoints}
+          correctAnswers={betHistory.filter((b) => b.correct).length}
+          onPlayAgain={handlePlayAgain}
+          onGoToOverview={handlePlayAgain}
+          finalWinnings={currentWinnings}
+          initialStake={INITIAL_STAKE}
+        />
+      )}
 
-        {currentScreen === 'my-bets' && (
-          <MyBets onBack={() => setCurrentScreen('event-selection')} />
-        )}
+      {currentScreen === 'friends-stats' && (
+        <FriendsStats onBack={() => setCurrentScreen('event-selection')} />
+      )}
 
-        {currentScreen === 'penalty-shootout' && (
-          <PenaltyShootout
-            onBack={() => setCurrentScreen('event-selection')}
-            onComplete={handlePenaltyComplete}
-          />
-        )}
+      {currentScreen === 'my-bets' && (
+        <MyBets onBack={() => setCurrentScreen('event-selection')} />
+      )}
 
-        {currentScreen === 'penalty-result' && (
-          <PenaltyResult
-            finalWinnings={penaltyStats.winnings}
-            correctPredictions={penaltyStats.correctPredictions}
-            totalPenalties={penaltyStats.totalPenalties}
-            initialStake={INITIAL_STAKE}
-            onPlayAgain={() => setCurrentScreen('penalty-shootout')}
-            onBackToMenu={handlePlayAgain}
-          />
-        )}
-        <Toaster />
-      </div>
-    </BetProvider>
+      {currentScreen === 'penalty-shootout' && (
+        <PenaltyShootout
+          onBack={() => setCurrentScreen('event-selection')}
+          onComplete={handlePenaltyComplete}
+        />
+      )}
+
+      {currentScreen === 'penalty-result' && (
+        <PenaltyResult
+          finalWinnings={penaltyStats.winnings}
+          correctPredictions={penaltyStats.correctPredictions}
+          totalPenalties={penaltyStats.totalPenalties}
+          initialStake={INITIAL_STAKE}
+          onPlayAgain={() => setCurrentScreen('penalty-shootout')}
+          onBackToMenu={handlePlayAgain}
+        />
+      )}
+      <Toaster />
+    </div>
   );
 }

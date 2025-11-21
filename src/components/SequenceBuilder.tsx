@@ -17,7 +17,7 @@ import { Match, SequenceOutcome } from '../App';
 import { Button } from './ui/button';
 import { PlayerSelector } from './PlayerSelector';
 import { toast } from 'sonner';
-import { useBets } from '../contexts/BetContext';
+import { useBetStore } from '../stores/useBetStore';
 import { OUTCOME_TEMPLATES, OutcomeTemplate } from '../data/outcomeTemplates';
 import { POPULAR_SEQUENCES, FRIEND_SEQUENCES } from '../data/sequences';
 
@@ -58,7 +58,7 @@ export function SequenceBuilder({
     Record<string, boolean>
   >({});
 
-  const { placedBets } = useBets();
+  const placedBets = useBetStore((state) => state.placedBets);
   const activeBets = placedBets.filter(
     (bet) => bet.status === 'pending' || bet.status === 'live'
   );
