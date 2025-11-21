@@ -23,31 +23,31 @@ interface BetStore {
 }
 
 export const useBetStore = create<BetStore>()(
-  persist(
-    (set) => ({
-      placedBets: [],
+  //   persist(
+  (set) => ({
+    placedBets: [],
 
-      addBet: (bet) =>
-        set((state) => ({
-          placedBets: [...state.placedBets, bet],
-        })),
+    addBet: (bet) =>
+      set((state) => ({
+        placedBets: [...state.placedBets, bet],
+      })),
 
-      updateBet: (betId, updates) =>
-        set((state) => ({
-          placedBets: state.placedBets.map((bet) =>
-            bet.id === betId ? { ...bet, ...updates } : bet
-          ),
-        })),
+    updateBet: (betId, updates) =>
+      set((state) => ({
+        placedBets: state.placedBets.map((bet) =>
+          bet.id === betId ? { ...bet, ...updates } : bet
+        ),
+      })),
 
-      removeBet: (betId) =>
-        set((state) => ({
-          placedBets: state.placedBets.filter((bet) => bet.id !== betId),
-        })),
+    removeBet: (betId) =>
+      set((state) => ({
+        placedBets: state.placedBets.filter((bet) => bet.id !== betId),
+      })),
 
-      clearBets: () => set({ placedBets: [] }),
-    }),
-    {
-      name: 'bet-storage', // localStorage key
-    }
-  )
+    clearBets: () => set({ placedBets: [] }),
+  })
+  //     {
+  //       name: 'bet-storage', // localStorage key
+  //     }
+  //   )
 );

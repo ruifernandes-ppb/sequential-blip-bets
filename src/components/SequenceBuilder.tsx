@@ -43,7 +43,6 @@ export function SequenceBuilder({
   const [selectedOutcomes, setSelectedOutcomes] = useState<SequenceOutcome[]>(
     []
   );
-  const [showSuggestions, setShowSuggestions] = useState(true);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [chatInput, setChatInput] = useState('');
   const [searchResults, setSearchResults] = useState<OutcomeTemplate[]>([]);
@@ -62,6 +61,12 @@ export function SequenceBuilder({
   const activeBets = placedBets.filter(
     (bet) => bet.status === 'pending' || bet.status === 'live'
   );
+
+  // Randomize odds by ±0.25
+  const randomizeOdds = (baseOdds: number): number => {
+    const variation = (Math.random() - 0.5) * 0.5; // Range: -0.25 to +0.25
+    return Math.max(1.1, Number((baseOdds + variation).toFixed(2))); // Ensure minimum odds of 1.1
+  };
 
   const toggleCategory = (category: string) => {
     setExpandedCategories((prev) => ({
@@ -101,12 +106,11 @@ export function SequenceBuilder({
       id: `${template.id}-${Date.now()}`,
       category: template.category,
       description: processedDescription,
-      odds: template.odds,
+      odds: randomizeOdds(template.odds),
       timeLimit: template.timeLimit,
       status: 'pending',
     };
     setSelectedOutcomes([...selectedOutcomes, newOutcome]);
-    setShowSuggestions(false);
 
     // Show success feedback
     toast.success(`Added: ${processedDescription}`, {
@@ -128,13 +132,17 @@ export function SequenceBuilder({
 
         const processedDescription = template.description
           .replace('{player1}', match.player1)
-          .replace('{player2}', match.player2);
+          .replace('{player2}', match.player2)
+          .replace(
+            '{playerName}',
+            Math.random() > 0.5 ? match.player1 : match.player2
+          );
 
         return {
           id: `${template.id}-${Date.now()}-${index}`,
           category: template.category,
           description: processedDescription,
-          odds: template.odds,
+          odds: randomizeOdds(template.odds),
           timeLimit: template.timeLimit,
           status: 'pending' as const,
         };
@@ -142,7 +150,6 @@ export function SequenceBuilder({
       .filter(Boolean) as SequenceOutcome[];
 
     setSelectedOutcomes(sequence);
-    setShowSuggestions(false);
   };
 
   const handleDragStart = (index: number) => {
@@ -426,7 +433,7 @@ export function SequenceBuilder({
         </div>
       )}
 
-      {showSuggestions && selectedOutcomes.length === 0 && (
+      {selectedOutcomes.length === 0 && (
         <div className='mb-4'>
           <div className='flex gap-2 mb-3'>
             <button
@@ -492,7 +499,7 @@ export function SequenceBuilder({
                             key={idx}
                             className='text-xs bg-[#0f1f3d] rounded-md px-2 py-1 rounded text-gray-300'
                           >
-                            {template.icon}{' '}
+                            <span className='mr-2'>{template.icon}</span>
                             {template.description.replace(
                               '{playerName}',
                               choosenTeam.split(' ')[0]
@@ -689,10 +696,10 @@ export function SequenceBuilder({
                       onClick={() =>
                         !isAlreadySelected && handleOutcomeClick(template)
                       }
-                      disabled={isAlreadySelected}
+                      // disabled={isAlreadySelected}
                       className={`bg-[#1a2f4d] text-white p-3 rounded-xl text-sm text-left transition-all relative ${
                         isAlreadySelected
-                          ? 'opacity-50 cursor-not-allowed border-2 border-green-500/60'
+                          ? 'border-2 border-green-500/60'
                           : template.allowPlayerSelection
                           ? 'border-2 border-purple-500/40 hover:bg-[#243a5c] active:scale-95'
                           : 'hover:bg-[#243a5c] active:scale-95'
@@ -729,9 +736,7 @@ export function SequenceBuilder({
                         </p>
                       )}
                       {isAlreadySelected && (
-                        <p className='text-green-400 text-xs mt-1'>
-                          Already selected
-                        </p>
+                        <p className='text-green-400 text-xs mt-1'>Selected</p>
                       )}
                     </button>
                   );

@@ -178,16 +178,17 @@ export function EventSelection({
               <div className='flex items-center gap-3'>
                 <Receipt className='w-5 h-5 text-cyan-400' />
                 <div className='text-left'>
-                  <span className='text-white block text-sm'>View My Bets</span>
-                  {activeBetsCount > 0 && (
-                    <span className='text-cyan-400 text-xs'>
-                      {activeBetsCount} active bet
-                      {activeBetsCount !== 1 ? 's' : ''}
-                    </span>
-                  )}
+                  <span className='text-white block text-sm'>
+                    View My Bets{' '}
+                    {activeBetsCount > 0 && (
+                      <span className='text-cyan-400 text-xs'>
+                        ({activeBetsCount} active bet
+                        {activeBetsCount !== 1 ? 's' : ''})
+                      </span>
+                    )}
+                  </span>
                 </div>
               </div>
-              <ArrowRight className='w-4 h-4 text-gray-400' />
             </div>
           </Button>
         </div>
