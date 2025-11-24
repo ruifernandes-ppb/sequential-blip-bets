@@ -84,11 +84,13 @@ function SortableOutcomeItem({
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center gap-3 bg-[#0f1f3d] rounded-xl p-3 transition-all ${
+      className={`flex items-center gap-3 bg-[#0f1f3d] rounded-xl p-3 transition-all touch-none ${
         isDragging ? 'opacity-50' : 'hover:bg-[#1a2f4d]'
       }`}
+      {...attributes}
+      {...listeners}
     >
-      <div {...attributes} {...listeners} className='cursor-move touch-none'>
+      <div className='cursor-move touch-none'>
         <GripVertical className='w-4 h-4 text-gray-500 flex-shrink-0' />
       </div>
       <div className='flex items-center justify-center w-8 h-8 rounded-full bg-cyan-500/20 text-cyan-400 flex-shrink-0 text-sm'>
@@ -127,11 +129,7 @@ export function SequenceBuilder({
   );
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8, // 8px of movement required before drag starts
-      },
-    }),
+    useSensor(PointerSensor, {}),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -901,6 +899,16 @@ export function SequenceBuilder({
           </Button>
         </div>
       )}
+
+      <div className='flex justify-center'>
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className='bg-gray-700/30 hover:bg-gray-700/50 text-gray-400 px-4 py-2 rounded-lg text-sm transition-colors flex items-center gap-2'
+        >
+          <ArrowLeft className='w-4 h-4 rotate-90' />
+          <span>Scroll to top</span>
+        </button>
+      </div>
 
       {selectedOutcomes.length === 0 && (
         <div className='flex items-center justify-center gap-2 text-gray-400 text-sm py-6'>

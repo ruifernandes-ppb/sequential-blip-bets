@@ -37,7 +37,7 @@ const LIVE_MATCHES: Match[] = [
     id: 'france-greece-2004',
     player1: 'France',
     player2: 'Greece',
-    player1Sets: 1,
+    player1Sets: 0,
     player2Sets: 0,
     player1Games: 0,
     player2Games: 0,
