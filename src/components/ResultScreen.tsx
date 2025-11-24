@@ -62,9 +62,8 @@ export function ResultScreen({
             €{finalWinnings.toFixed(2)}
           </div>
           <div
-            className={`text-sm ${
-              profit >= 0 ? 'text-green-400' : 'text-red-400'
-            }`}
+            className={`text-sm ${profit >= 0 ? 'text-green-400' : 'text-red-400'
+              }`}
           >
             {profit >= 0 ? '+' : ''}€{profit.toFixed(2)} (
             {profit >= 0 ? 'Profit' : 'Loss'})
@@ -75,45 +74,6 @@ export function ResultScreen({
           <span className='text-white'>€{initialStake.toFixed(2)}</span>
         </div>
       </div>
-
-      {/* Notification Card */}
-      <div className='bg-[#1a2f4d] rounded-3xl p-6 mb-6 relative overflow-hidden'>
-        <div className='flex items-start justify-between'>
-          <div className='flex-1'>
-            <h3 className='text-white mb-2'>
-              Get Daily Quiz reminders and leaderboard updates!
-            </h3>
-            <button className='text-cyan-400 hover:text-cyan-300 transition-colors'>
-              Turn on notifications
-            </button>
-          </div>
-          <div className='ml-4'>
-            <div className='relative'>
-              <Bell className='w-12 h-12 text-cyan-400' />
-              <div className='absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse' />
-            </div>
-            {/* Decorative sparkles */}
-            <div className='absolute top-0 right-0 text-green-400 opacity-60'>
-              <svg className='w-8 h-8' viewBox='0 0 24 24' fill='currentColor'>
-                <path d='M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5z' />
-              </svg>
-            </div>
-            <div className='absolute bottom-2 right-8 text-cyan-400 opacity-40'>
-              <svg className='w-6 h-6' viewBox='0 0 24 24' fill='currentColor'>
-                <path d='M12 2l1.5 4.5L18 8l-4.5 1.5L12 14l-1.5-4.5L6 8l4.5-1.5z' />
-              </svg>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Action Buttons */}
-      <Button
-        onClick={onPlayAgain}
-        className='w-full bg-cyan-400 hover:bg-cyan-500 text-[#0a1628] py-6 rounded-2xl mb-3'
-      >
-        Play again
-      </Button>
 
       <Button
         onClick={onGoToOverview}

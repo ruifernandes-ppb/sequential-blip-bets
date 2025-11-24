@@ -42,7 +42,7 @@ export function LiveWatching({
   onBack,
 }: LiveWatchingProps) {
   const [sequence, setSequence] = useState<SequenceOutcome[]>(initialSequence);
-  const [currentWinnings, setCurrentWinnings] = useState(initialStake);
+  const [currentWinnings, setCurrentWinnings] = useState(0); // Track profit, starts at 0
   const [totalPoints, setTotalPoints] = useState(0);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [showAddMenu, setShowAddMenu] = useState(false);
@@ -50,6 +50,9 @@ export function LiveWatching({
   const [pendingTemplate, setPendingTemplate] =
     useState<OutcomeTemplate | null>(null);
   const [sequenceAttempts, setSequenceAttempts] = useState(0);
+  const [successfulRuns, setSuccessfulRuns] = useState(0);
+  const [failedRuns, setFailedRuns] = useState(0);
+  const [gameTimeRemaining, setGameTimeRemaining] = useState(180); // 3 minutes = 180 seconds
 
   const recordSequenceAttempt = useBetStore((state) => state.recordSequenceAttempt);
   const sequenceStats = useBetStore((state) => state.sequenceStats);
@@ -65,6 +68,37 @@ export function LiveWatching({
 
     return () => clearTimeout(startTimer);
   }, []);
+
+  useEffect(() => {
+    // Game timer countdown
+    const gameTimer = setInterval(() => {
+      setGameTimeRemaining((prev) => {
+        if (prev <= 1) {
+          clearInterval(gameTimer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(gameTimer);
+  }, []);
+
+  // Separate effect to handle game end
+  useEffect(() => {
+    if (gameTimeRemaining === 0) {
+      // Game ended, show results
+      const history: BetResult[] = sequence
+        .filter((o) => o.status === 'success' || o.status === 'failed')
+        .map((o) => ({
+          outcomeId: o.id,
+          description: o.description,
+          correct: o.result || false,
+          selectedOdds: o.odds,
+        }));
+      onComplete(history, currentWinnings, totalPoints);
+    }
+  }, [gameTimeRemaining, currentWinnings, totalPoints, sequence, onComplete]);
 
   const processNextOutcome = () => {
     setSequence((currentSequence) => {
@@ -102,20 +136,17 @@ export function LiveWatching({
           : o
       );
 
-      // Update winnings - each bet is independent
+      // Update winnings and points
       if (happened) {
-        const winAmount = currentWinnings * outcome.odds;
-        setCurrentWinnings(winAmount);
         setTotalPoints((prev) => prev + 100);
       } else {
         // On failure, restart the sequence
-        const penaltyAmount = currentWinnings * WRONG_ANSWER_PENALTY;
-        setCurrentWinnings(penaltyAmount);
         setTotalPoints((prev) => Math.max(0, prev - 50));
 
         // Record failed sequence attempt
         setSequenceAttempts((prev) => prev + 1);
-        recordSequenceAttempt(false, penaltyAmount, initialStake);
+        setFailedRuns((prev) => prev + 1);
+        recordSequenceAttempt(false, 0, initialStake);
       }
 
       if (!happened) {
@@ -143,57 +174,38 @@ export function LiveWatching({
       );
 
       if (allResolved) {
-        // Complete the sequence with streak bonuses
-        const history: BetResult[] = updatedSequence.map((o) => ({
-          outcomeId: o.id,
-          description: o.description,
-          correct: o.result || false,
-          selectedOdds: o.odds,
-        }));
+        // Sequence complete! Calculate profit based on odds and length
+        // 1. Multiply all odds together to get final odd
+        const finalOdd = updatedSequence.reduce((acc, o) => acc * o.odds, 1);
 
+        // 2. Calculate bonus multiplier for sequences longer than 3 steps
+        const lengthBonus = updatedSequence.length > 3
+          ? 0.05 * (updatedSequence.length - 3)
+          : 0;
+
+        // 3. Calculate profit: stake * finalOdd * (1 + lengthBonus)
+        const profit = initialStake * finalOdd * (1 + lengthBonus);
+
+        setCurrentWinnings((prev) => prev + profit);
+
+        // Record successful sequence
+        setSequenceAttempts((prev) => prev + 1);
+        setSuccessfulRuns((prev) => prev + 1);
+        recordSequenceAttempt(true, profit, initialStake);
+
+        // Reset sequence to pending and continue playing until timer runs out
         setTimeout(() => {
-          // Calculate final winnings with streak bonuses
-          let finalWinnings = initialStake;
-
-          // Process each outcome
-          updatedSequence.forEach((o) => {
-            if (o.result) {
-              finalWinnings *= o.odds;
-            }
-          });
-
-          // Calculate streak bonuses
-          let maxStreak = 0;
-          let streakBonuses = 0;
-
-          updatedSequence.forEach((o, idx) => {
-            if (o.result) {
-              maxStreak++;
-
-              // Apply streak bonuses for consecutive correct
-              if (maxStreak === 2) {
-                streakBonuses += finalWinnings * 0.1; // +10% bonus
-              } else if (maxStreak === 3) {
-                streakBonuses += finalWinnings * 0.1; // additional +10% (20% total)
-              } else if (maxStreak >= 4) {
-                streakBonuses += finalWinnings * 0.1; // additional +10% (30% total)
-              }
-            }
-          });
-
-          // All correct bonus
-          const allCorrect = updatedSequence.every((o) => o.result);
-          if (allCorrect && updatedSequence.length > 0) {
-            streakBonuses += finalWinnings * (updatedSequence.length * 0.2);
-          }
-
-          const totalWithBonuses = finalWinnings + streakBonuses;
-
-          // Record successful sequence
-          setSequenceAttempts((prev) => prev + 1);
-          recordSequenceAttempt(true, totalWithBonuses, initialStake);
-
-          onComplete(history, totalWithBonuses, totalPoints);
+          setSequence((prev) =>
+            prev.map((o) => ({
+              ...o,
+              status: 'pending' as const,
+              result: undefined,
+            }))
+          );
+          // Start next sequence
+          setTimeout(() => {
+            processNextOutcome();
+          }, 1000);
         }, 2000);
       } else {
         // Process next outcome after a short delay
@@ -237,20 +249,6 @@ export function LiveWatching({
 
   const handleDragEnd = () => {
     setDraggedIndex(null);
-  };
-
-  const handleCashout = () => {
-    const resolvedOutcomes = sequence.filter(
-      (o) => o.status === 'success' || o.status === 'failed'
-    );
-    const history: BetResult[] = resolvedOutcomes.map((o) => ({
-      outcomeId: o.id,
-      description: o.description,
-      correct: o.result || false,
-      selectedOdds: o.odds,
-    }));
-
-    onComplete(history, currentWinnings, totalPoints);
   };
 
   const handleOutcomeClick = (template: OutcomeTemplate) => {
@@ -333,90 +331,64 @@ export function LiveWatching({
             {match.player1} vs {match.player2} • Set {match.currentSet}
           </p>
         </div>
-        <button onClick={onBack} className='text-white p-2'>
-          <X className='w-5 h-5' />
-        </button>
+        <div className='flex items-center gap-3'>
+          <div className='bg-orange-500/20 border border-orange-500/40 rounded-lg px-3 py-1.5'>
+            <div className='flex items-center gap-1.5'>
+              <Clock className='w-4 h-4 text-orange-400' />
+              <span className='text-orange-400 text-sm font-bold'>
+                {Math.floor(gameTimeRemaining / 60)}:{String(gameTimeRemaining % 60).padStart(2, '0')}
+              </span>
+            </div>
+          </div>
+          <button onClick={onBack} className='text-white p-2'>
+            <X className='w-5 h-5' />
+          </button>
+        </div>
       </div>
 
-      {/* Overall Statistics Card */}
+      {/* Session Statistics Card */}
       <div className='bg-gradient-to-br from-purple-900/40 to-indigo-900/40 rounded-2xl p-4 mb-4 border border-purple-500/30'>
         <div className='flex items-center gap-2 mb-3'>
           <BarChart3 className='w-4 h-4 text-purple-400' />
-          <h3 className='text-white text-sm'>Your Statistics</h3>
+          <h3 className='text-white text-sm'>Session Overview</h3>
         </div>
-        <div className='grid grid-cols-2 gap-3'>
-          <div className='bg-black/20 rounded-xl p-3'>
-            <div className='flex items-center gap-1 mb-1'>
-              <Target className='w-3 h-3 text-green-400' />
-              <span className='text-gray-400 text-xs'>Success Rate</span>
-            </div>
-            <span className='text-green-400 text-lg'>
-              {sequenceStats.totalSequences > 0
-                ? ((sequenceStats.successfulSequences / sequenceStats.totalSequences) * 100).toFixed(0)
-                : 0}%
-            </span>
-            <p className='text-gray-500 text-xs mt-1'>
-              {sequenceStats.successfulSequences}/{sequenceStats.totalSequences} sequences
-            </p>
-          </div>
-
-          <div className='bg-black/20 rounded-xl p-3'>
-            <div className='flex items-center gap-1 mb-1'>
-              <Trophy className='w-3 h-3 text-cyan-400' />
-              <span className='text-gray-400 text-xs'>Total Earnings</span>
-            </div>
-            <span className={`text-lg ${sequenceStats.totalEarnings >= 0 ? 'text-cyan-400' : 'text-red-400'}`}>
-              €{sequenceStats.totalEarnings.toFixed(2)}
-            </span>
-            <p className='text-gray-500 text-xs mt-1'>
-              €{sequenceStats.totalSpent.toFixed(2)} spent
-            </p>
-          </div>
-        </div>
-
-        {sequenceAttempts > 0 && (
-          <div className='mt-3 pt-3 border-t border-purple-500/20'>
-            <p className='text-purple-300 text-xs'>
-              This session: {sequenceAttempts} attempt{sequenceAttempts !== 1 ? 's' : ''}
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Stats */}
-      <div className='bg-gradient-to-br from-[#1a2f4d] to-[#0f1f3d] rounded-2xl p-4 mb-4 border border-cyan-500/30'>
         <div className='grid grid-cols-3 gap-3'>
-          <div className='text-center'>
-            <div className='flex items-center justify-center gap-1 mb-1'>
+          <div className='bg-black/20 rounded-xl p-3'>
+            <div className='flex items-center gap-1 mb-1'>
               <EuroIcon className='w-3 h-3 text-gray-400' />
-              <span className='text-gray-400 text-xs'>Your bet</span>
+              <span className='text-gray-400 text-xs'>Initial Bet</span>
             </div>
-            <span className='text-white text-sm'>
+            <span className='text-white text-lg'>
               €{initialStake.toFixed(2)}
             </span>
           </div>
 
-          <div className='text-center'>
-            <div className='flex items-center justify-center gap-1 mb-1'>
+          <div className='bg-black/20 rounded-xl p-3'>
+            <div className='flex items-center gap-1 mb-1'>
               <Trophy className='w-3 h-3 text-cyan-400' />
-              <span className='text-gray-400 text-xs'>Potential Returns</span>
+              <span className='text-gray-400 text-xs'>Earned</span>
             </div>
-            <span className='text-cyan-400'>€{currentWinnings.toFixed(2)}</span>
-            {sequence.length > 3 && (
-              <p className='text-green-400 text-xs mt-0.5'>
-                +{(sequence.length - 3) * 5}% boost
-              </p>
-            )}
+            <span className={`text-lg ${currentWinnings >= 0 ? 'text-cyan-400' : 'text-red-400'}`}>
+              €{currentWinnings.toFixed(2)}
+            </span>
+            <p className='text-gray-500 text-xs mt-1'>
+              profit
+            </p>
           </div>
 
-          <div className='text-center'>
-            <div className='flex items-center justify-center gap-1 mb-1'>
-              <TrendingUp className='w-3 h-3 text-green-400' />
-              <span className='text-gray-400 text-xs'>Progress</span>
+          <div className='bg-black/20 rounded-xl p-3'>
+            <div className='flex items-center gap-1 mb-1'>
+              <Target className='w-3 h-3 text-green-400' />
+              <span className='text-gray-400 text-xs'>Runs</span>
             </div>
-            <span className='text-white text-sm'>
-              {completedCount}/{sequence.length}
-            </span>
+            <div className='flex items-center gap-2'>
+              <span className='text-green-400 text-lg'>{successfulRuns}</span>
+              <span className='text-gray-500 text-xs'>/</span>
+              <span className='text-red-400 text-lg'>{failedRuns}</span>
+            </div>
+            <p className='text-gray-500 text-xs mt-1'>
+              success / failed
+            </p>
           </div>
         </div>
       </div>
@@ -429,17 +401,6 @@ export function LiveWatching({
             <p className='text-gray-400 text-xs'>Drag pending to reorder</p>
           )}
         </div>
-
-        {/* Streak Indicator */}
-        {currentStreak >= 2 && (
-          <div className='mb-3 bg-gradient-to-r from-yellow-600/30 to-orange-600/30 border-2 border-yellow-400 rounded-xl p-3 animate-pulse'>
-            <div className='flex items-center justify-center gap-2'>
-              <span className='text-2xl'>🔥</span>
-              <div>
-              </div>
-            </div>
-          </div>
-        )}
 
         <div className='space-y-3'>
           {sequence.map((outcome, index) => {
@@ -553,20 +514,6 @@ export function LiveWatching({
           })}
         </div>
       </div>
-
-      {/* Cash Out Button */}
-      {completedCount > 0 && (
-        <Button
-          onClick={handleCashout}
-          variant='outline'
-          className='w-full border-2 border-green-500 text-green-400 hover:bg-green-500/10 py-6 rounded-2xl bg-transparent'
-        >
-          <div className='flex items-center justify-center gap-2'>
-            <Trophy className='w-5 h-5' />
-            <span>Cash Out Now (€{currentWinnings.toFixed(2)})</span>
-          </div>
-        </Button>
-      )}
 
       {/* Add Selection Button */}
       {!showAddMenu && (
