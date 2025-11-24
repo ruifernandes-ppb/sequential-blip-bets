@@ -145,7 +145,7 @@ export function SequenceBuilder({
 
   const [initialStake, setInitialStake] = useState<number>(0); // Initial stake of €10
 
-  const placedBets = useBetStore((state) => state.placedBets);
+  // const placedBets = useBetStore((state) => state.placedBets);
   // const activeBets = placedBets.filter(
   //   (bet) =>
   //     bet.matchId === match.id &&

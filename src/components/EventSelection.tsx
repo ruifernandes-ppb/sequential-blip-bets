@@ -95,7 +95,7 @@ export function EventSelection({
     <div className='min-h-screen flex flex-col p-4 max-w-md mx-auto'>
       {/* Header */}
       <div className='text-center mb-8 mt-6'>
-        <div className='flex flex-col items-center justify-center gap-2 mb-2'>
+        <div className='flex items-center justify-center gap-2 mb-2'>
           {/* <Trophy className='w-8 h-8 text-cyan-400' /> */}
           <FlutterIcon />
           <h1 className='text-white text-2xl'>Sequential Betting</h1>

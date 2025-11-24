@@ -1,8 +1,8 @@
 export default function FlutterIcon() {
   return (
     <svg
-      width='250'
-      height='75'
+      width='75'
+      height='30'
       viewBox='0 0 2177 466'
       fill='none'
       xmlns='http://www.w3.org/2000/svg'
