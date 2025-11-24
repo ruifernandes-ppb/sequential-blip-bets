@@ -20,6 +20,23 @@ import { toast } from 'sonner';
 import { useBetStore } from '../stores/useBetStore';
 import { OUTCOME_TEMPLATES, OutcomeTemplate } from '../data/outcomeTemplates';
 import { POPULAR_SEQUENCES, FRIEND_SEQUENCES } from '../data/sequences';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface SequenceBuilderProps {
   match: Match;
@@ -36,6 +53,64 @@ interface Player {
   oddsModifier?: number;
 }
 
+interface SortableOutcomeItemProps {
+  outcome: SequenceOutcome;
+  index: number;
+  categoryIcons: Record<string, string>;
+  onRemove: (id: string) => void;
+}
+
+function SortableOutcomeItem({
+  outcome,
+  index,
+  categoryIcons,
+  onRemove,
+}: SortableOutcomeItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: outcome.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-center gap-3 bg-[#0f1f3d] rounded-xl p-3 transition-all ${
+        isDragging ? 'opacity-50' : 'hover:bg-[#1a2f4d]'
+      }`}
+    >
+      <div {...attributes} {...listeners} className='cursor-move touch-none'>
+        <GripVertical className='w-4 h-4 text-gray-500 flex-shrink-0' />
+      </div>
+      <div className='flex items-center justify-center w-8 h-8 rounded-full bg-cyan-500/20 text-cyan-400 flex-shrink-0 text-sm'>
+        {index + 1}
+      </div>
+      <div className='flex-1 min-w-0'>
+        <p className='text-white text-sm'>{outcome.description}</p>
+        <p className='text-gray-400 text-xs'>
+          {outcome.odds.toFixed(2)}x • {outcome.timeLimit}s window
+        </p>
+      </div>
+      <span className='text-xl'>{categoryIcons[outcome.category]}</span>
+      <button
+        onClick={() => onRemove(outcome.id)}
+        className='text-red-400 hover:text-red-300 p-1'
+      >
+        <Trash2 className='w-4 h-4' />
+      </button>
+    </div>
+  );
+}
+
 export function SequenceBuilder({
   match,
   onComplete,
@@ -44,12 +119,22 @@ export function SequenceBuilder({
   const [selectedOutcomes, setSelectedOutcomes] = useState<SequenceOutcome[]>(
     []
   );
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [chatInput, setChatInput] = useState('');
   const [searchResults, setSearchResults] = useState<OutcomeTemplate[]>([]);
   const [showChatResults, setShowChatResults] = useState(false);
   const [suggestionTab, setSuggestionTab] = useState<'popular' | 'friends'>(
     'popular'
+  );
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // 8px of movement required before drag starts
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
   );
   const [showPlayerSelector, setShowPlayerSelector] = useState(false);
   const [pendingTemplate, setPendingTemplate] =
@@ -151,25 +236,17 @@ export function SequenceBuilder({
     setSelectedOutcomes(sequence);
   };
 
-  const handleDragStart = (index: number) => {
-    setDraggedIndex(index);
-  };
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
 
-  const handleDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault();
-    if (draggedIndex === null || draggedIndex === index) return;
+    if (over && active.id !== over.id) {
+      setSelectedOutcomes((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
 
-    const newOutcomes = [...selectedOutcomes];
-    const draggedItem = newOutcomes[draggedIndex];
-    newOutcomes.splice(draggedIndex, 1);
-    newOutcomes.splice(index, 0, draggedItem);
-
-    setSelectedOutcomes(newOutcomes);
-    setDraggedIndex(index);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedIndex(null);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
   };
 
   const handleChatSearch = (e: React.FormEvent) => {
@@ -451,40 +528,28 @@ export function SequenceBuilder({
             <p className='text-gray-400 text-xs'>Drag to reorder</p>
           </div>
 
-          <div className='space-y-2 mb-4'>
-            {selectedOutcomes.map((outcome, index) => (
-              <div
-                key={outcome.id}
-                draggable
-                onDragStart={() => handleDragStart(index)}
-                onDragOver={(e) => handleDragOver(e, index)}
-                onDragEnd={handleDragEnd}
-                className={`flex items-center gap-3 bg-[#0f1f3d] rounded-xl p-3 cursor-move transition-all ${
-                  draggedIndex === index ? 'opacity-50' : 'hover:bg-[#1a2f4d]'
-                }`}
-              >
-                <GripVertical className='w-4 h-4 text-gray-500 flex-shrink-0' />
-                <div className='flex items-center justify-center w-8 h-8 rounded-full bg-cyan-500/20 text-cyan-400 flex-shrink-0 text-sm'>
-                  {index + 1}
-                </div>
-                <div className='flex-1 min-w-0'>
-                  <p className='text-white text-sm'>{outcome.description}</p>
-                  <p className='text-gray-400 text-xs'>
-                    {outcome.odds.toFixed(2)}x • {outcome.timeLimit}s window
-                  </p>
-                </div>
-                <span className='text-xl'>
-                  {categoryIcons[outcome.category]}
-                </span>
-                <button
-                  onClick={() => removeOutcome(outcome.id)}
-                  className='text-red-400 hover:text-red-300 p-1'
-                >
-                  <Trash2 className='w-4 h-4' />
-                </button>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={selectedOutcomes.map((o) => o.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className='space-y-2 mb-4'>
+                {selectedOutcomes.map((outcome, index) => (
+                  <SortableOutcomeItem
+                    key={outcome.id}
+                    outcome={outcome}
+                    index={index}
+                    categoryIcons={categoryIcons}
+                    onRemove={removeOutcome}
+                  />
+                ))}
               </div>
-            ))}
-          </div>
+            </SortableContext>
+          </DndContext>
         </div>
       )}
 
