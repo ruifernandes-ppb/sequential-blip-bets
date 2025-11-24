@@ -49,12 +49,13 @@ export function LiveWatching({
   const [showPlayerSelector, setShowPlayerSelector] = useState(false);
   const [pendingTemplate, setPendingTemplate] =
     useState<OutcomeTemplate | null>(null);
-  const [sequenceAttempts, setSequenceAttempts] = useState(0);
   const [successfulRuns, setSuccessfulRuns] = useState(0);
   const [failedRuns, setFailedRuns] = useState(0);
   const [gameTimeRemaining, setGameTimeRemaining] = useState(180); // 3 minutes = 180 seconds
 
-  const recordSequenceAttempt = useBetStore((state) => state.recordSequenceAttempt);
+  const recordSequenceAttempt = useBetStore(
+    (state) => state.recordSequenceAttempt
+  );
   const sequenceStats = useBetStore((state) => state.sequenceStats);
 
   const CORRECT_PENALTY_MULTIPLIER = 1; // Keep 100% of winnings
@@ -96,7 +97,7 @@ export function LiveWatching({
           correct: o.result || false,
           selectedOdds: o.odds,
         }));
-      onComplete(history, currentWinnings, totalPoints);
+      onComplete(history, currentWinnings, successfulRuns);
     }
   }, [gameTimeRemaining, currentWinnings, totalPoints, sequence, onComplete]);
 
@@ -126,13 +127,25 @@ export function LiveWatching({
   };
 
   const resolveOutcome = (outcome: SequenceOutcome) => {
-    // Randomly determine if outcome happened (60% success rate for demo)
+    // Find the index of the current outcome
+    const outcomeIndex = sequence.findIndex((o) => o.id === outcome.id);
+
+    // For index 0, always succeed (100% success rate)
+    // For other indices, use 60% success rate
     const happened = Math.random() > 0.4;
 
     setSequence((prev) => {
       const updatedSequence = prev.map((o) =>
         o.id === outcome.id
-          ? { ...o, status: happened ? ('success' as const) : ('failed' as const), result: happened }
+          ? {
+              ...o,
+              status: happened
+                ? ('success' as const)
+                : outcomeIndex == 0
+                ? ('pending' as const)
+                : ('failed' as const),
+              result: happened,
+            }
           : o
       );
 
@@ -143,9 +156,7 @@ export function LiveWatching({
         // On failure, restart the sequence
         setTotalPoints((prev) => Math.max(0, prev - 50));
 
-        // Record failed sequence attempt
-        setSequenceAttempts((prev) => prev + 1);
-        setFailedRuns((prev) => prev + 1);
+        setFailedRuns((prev) => (outcomeIndex == 0 ? prev : prev + 1));
         recordSequenceAttempt(false, 0, initialStake);
       }
 
@@ -169,27 +180,29 @@ export function LiveWatching({
       }
 
       // Check if all outcomes are successful
-      const allResolved = updatedSequence.every(
-        (o) => o.status === 'success'
-      );
+      const allResolved = updatedSequence.every((o) => o.status === 'success');
 
       if (allResolved) {
+        const MAX_EVENT_ODD = 5;
         // Sequence complete! Calculate profit based on odds and length
-        // 1. Multiply all odds together to get final odd
-        const finalOdd = updatedSequence.reduce((acc, o) => acc * o.odds, 1);
+        // Calculate difficulty multiplier (lower odds = harder = higher payout)
+        // Start with higher base and multiply by inverse of each odd
+        const difficultyMultiplier = updatedSequence.reduce(
+          (acc, o) => acc * (MAX_EVENT_ODD / o.odds),
+          1
+        );
 
-        // 2. Calculate bonus multiplier for sequences longer than 3 steps
-        const lengthBonus = updatedSequence.length > 3
-          ? 0.05 * (updatedSequence.length - 3)
-          : 0;
+        // 2. Calculate bonus multiplier for sequences longer than 3 steps (5% per additional step)
+        const lengthBonus =
+          updatedSequence.length > 3 ? 0.05 * (updatedSequence.length - 3) : 0;
 
-        // 3. Calculate profit: stake * finalOdd * (1 + lengthBonus)
-        const profit = initialStake * finalOdd * (1 + lengthBonus);
+        // 3. Calculate profit: stake * difficulty multiplier * (1 + bonus)
+        const profit =
+          updatedSequence.length >= 3
+            ? initialStake * difficultyMultiplier * (1 + lengthBonus)
+            : 0;
 
         setCurrentWinnings((prev) => prev + profit);
-
-        // Record successful sequence
-        setSequenceAttempts((prev) => prev + 1);
         setSuccessfulRuns((prev) => prev + 1);
         recordSequenceAttempt(true, profit, initialStake);
 
@@ -336,7 +349,8 @@ export function LiveWatching({
             <div className='flex items-center gap-1.5'>
               <Clock className='w-4 h-4 text-orange-400' />
               <span className='text-orange-400 text-sm font-bold'>
-                {Math.floor(gameTimeRemaining / 60)}:{String(gameTimeRemaining % 60).padStart(2, '0')}
+                {Math.floor(gameTimeRemaining / 60)}:
+                {String(gameTimeRemaining % 60).padStart(2, '0')}
               </span>
             </div>
           </div>
@@ -368,12 +382,14 @@ export function LiveWatching({
               <Trophy className='w-3 h-3 text-cyan-400' />
               <span className='text-gray-400 text-xs'>Earned</span>
             </div>
-            <span className={`text-lg ${currentWinnings >= 0 ? 'text-cyan-400' : 'text-red-400'}`}>
+            <span
+              className={`text-lg ${
+                currentWinnings >= 0 ? 'text-cyan-400' : 'text-red-400'
+              }`}
+            >
               €{currentWinnings.toFixed(2)}
             </span>
-            <p className='text-gray-500 text-xs mt-1'>
-              profit
-            </p>
+            <p className='text-gray-500 text-xs mt-1'>profit</p>
           </div>
 
           <div className='bg-black/20 rounded-xl p-3'>
@@ -386,9 +402,7 @@ export function LiveWatching({
               <span className='text-gray-500 text-xs'>/</span>
               <span className='text-red-400 text-lg'>{failedRuns}</span>
             </div>
-            <p className='text-gray-500 text-xs mt-1'>
-              success / failed
-            </p>
+            <p className='text-gray-500 text-xs mt-1'>success / failed</p>
           </div>
         </div>
       </div>
@@ -397,9 +411,6 @@ export function LiveWatching({
       <div className='flex-1 overflow-y-auto mb-4'>
         <div className='flex items-center justify-between mb-3'>
           <h3 className='text-white text-sm'>Your Timeline</h3>
-          {pendingCount > 0 && (
-            <p className='text-gray-400 text-xs'>Drag pending to reorder</p>
-          )}
         </div>
 
         <div className='space-y-3'>
@@ -412,36 +423,39 @@ export function LiveWatching({
             return (
               <div
                 key={outcome.id}
-                draggable={isPending}
                 onDragStart={() => handleDragStart(index)}
                 onDragOver={(e) => handleDragOver(e, index)}
                 onDragEnd={handleDragEnd}
                 className={`
                   flex items-center gap-3 rounded-xl p-4 transition-all
-                  ${isPending
-                    ? 'bg-[#1a2f4d] border border-gray-600 cursor-move hover:bg-[#243a5c]'
-                    : ''
+                  ${
+                    isPending
+                      ? 'bg-[#1a2f4d] border border-gray-600 cursor-move hover:bg-[#243a5c]'
+                      : ''
                   }
-                  ${isChecking
-                    ? 'bg-gradient-to-r from-orange-600/30 to-yellow-600/30 border-2 border-orange-400 animate-pulse'
-                    : ''
+                  ${
+                    isChecking
+                      ? 'bg-gradient-to-r from-orange-600/30 to-yellow-600/30 border-2 border-orange-400 animate-pulse'
+                      : ''
                   }
-                  ${isSuccess
-                    ? 'bg-gradient-to-r from-green-600/30 to-emerald-600/30 border-2 border-green-400'
-                    : ''
+                  ${
+                    isSuccess
+                      ? 'bg-gradient-to-r from-green-600/30 to-emerald-600/30 border-2 border-green-400'
+                      : ''
                   }
-                  ${isFailed
-                    ? 'bg-gradient-to-r from-red-600/30 to-rose-600/30 border-2 border-red-400'
-                    : ''
+                  ${
+                    isFailed
+                      ? 'bg-gradient-to-r from-red-600/30 to-rose-600/30 border-2 border-red-400'
+                      : ''
                   }
                   ${draggedIndex === index ? 'opacity-50' : ''}
                 `}
               >
                 {/* Drag Handle or Status Icon */}
                 <div className='flex-shrink-0'>
-                  {isPending && (
+                  {/* {isPending && (
                     <GripVertical className='w-4 h-4 text-gray-500' />
-                  )}
+                  )} */}
                   {isChecking && (
                     <div className='w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center'>
                       <Clock className='w-4 h-4 text-white animate-spin' />
@@ -475,19 +489,21 @@ export function LiveWatching({
                 {/* Description */}
                 <div className='flex-1 min-w-0'>
                   <p
-                    className={`text-sm mb-1 ${isPending ? 'text-gray-300' : 'text-white'
-                      }`}
+                    className={`text-sm mb-1 ${
+                      isPending ? 'text-gray-300' : 'text-white'
+                    }`}
                   >
                     {outcome.description}
                   </p>
                   <div className='flex items-center gap-2'>
                     <span
-                      className={`text-xs ${isSuccess
-                        ? 'text-green-300'
-                        : isFailed
+                      className={`text-xs ${
+                        isSuccess
+                          ? 'text-green-300'
+                          : isFailed
                           ? 'text-red-300'
                           : 'text-gray-400'
-                        }`}
+                      }`}
                     >
                       {outcome.odds.toFixed(2)}x
                     </span>
@@ -504,8 +520,9 @@ export function LiveWatching({
 
                 {/* Icon */}
                 <span
-                  className={`text-2xl ${isPending ? 'opacity-50' : 'opacity-100'
-                    }`}
+                  className={`text-2xl ${
+                    isPending ? 'opacity-50' : 'opacity-100'
+                  }`}
                 >
                   {categoryIcons[outcome.category]}
                 </span>
@@ -561,6 +578,8 @@ export function LiveWatching({
             setShowPlayerSelector(false);
             setPendingTemplate(null);
           }}
+          template={pendingTemplate}
+          matchId={match.id}
           onSelectPlayer={handlePlayerSelect}
           team1Name={match.player1}
           team2Name={match.player2}

@@ -9,6 +9,7 @@ import {
 import { Match } from '../App';
 import { Button } from './ui/button';
 import { useBetStore } from '../stores/useBetStore';
+import FlutterIcon from './FlutterIcon';
 
 interface EventSelectionProps {
   onMatchSelect: (match: Match) => void;
@@ -94,15 +95,16 @@ export function EventSelection({
     <div className='min-h-screen flex flex-col p-4 max-w-md mx-auto'>
       {/* Header */}
       <div className='text-center mb-8 mt-6'>
-        <div className='flex items-center justify-center gap-2 mb-2'>
-          <Trophy className='w-8 h-8 text-cyan-400' />
+        <div className='flex flex-col items-center justify-center gap-2 mb-2'>
+          {/* <Trophy className='w-8 h-8 text-cyan-400' /> */}
+          <FlutterIcon />
           <h1 className='text-white text-2xl'>Sequential Betting</h1>
         </div>
         <p className='text-gray-400'>Bet on the story, not just the score</p>
       </div>
 
       {/* Penalty Shootout Special */}
-      {onPenaltyShootout && (
+      {onPenaltyShootout && placedBets.length > 0 && (
         <div className='mb-6'>
           <button
             onClick={onPenaltyShootout}

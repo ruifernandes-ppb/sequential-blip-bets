@@ -322,7 +322,7 @@ export function PenaltyShootout({ onBack, onComplete }: PenaltyShootoutProps) {
                   onChange={(e) => setBetAmount(e.target.value)}
                   min='1'
                   step='1'
-                  className='w-full bg-[#0f1f3d] text-white text-2xl rounded-xl px-4 py-4 pl-12 border border-cyan-500/30 focus:border-cyan-500/60 focus:outline-none'
+                  className='w-full bg-[#0f1f3d] text-white text-2xl rounded-xl pl-10 px-4 py-4 pl-12 border border-cyan-500/30 focus:border-cyan-500/60 focus:outline-none'
                   placeholder='10'
                 />
               </div>

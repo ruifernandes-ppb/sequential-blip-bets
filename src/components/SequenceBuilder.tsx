@@ -33,6 +33,7 @@ interface Player {
   number: number;
   position: string;
   team: 'player1' | 'player2';
+  oddsModifier?: number;
 }
 
 export function SequenceBuilder({
@@ -57,16 +58,14 @@ export function SequenceBuilder({
     Record<string, boolean>
   >({});
 
-  const placedBets = useBetStore((state) => state.placedBets);
-  const activeBets = placedBets.filter(
-    (bet) => bet.status === 'pending' || bet.status === 'live'
-  );
+  const [initialStake, setInitialStake] = useState<number>(0); // Initial stake of €10
 
-  // Randomize odds by ±0.25
-  const randomizeOdds = (baseOdds: number): number => {
-    const variation = (Math.random() - 0.5) * 0.5; // Range: -0.25 to +0.25
-    return Math.max(1.1, Number((baseOdds + variation).toFixed(2))); // Ensure minimum odds of 1.1
-  };
+  const placedBets = useBetStore((state) => state.placedBets);
+  // const activeBets = placedBets.filter(
+  //   (bet) =>
+  //     bet.matchId === match.id &&
+  //     (bet.status === 'pending' || bet.status === 'live')
+  // );
 
   const toggleCategory = (category: string) => {
     setExpandedCategories((prev) => ({
@@ -106,7 +105,7 @@ export function SequenceBuilder({
       id: `${template.id}-${Date.now()}`,
       category: template.category,
       description: processedDescription,
-      odds: randomizeOdds(template.odds),
+      odds: template.odds + (player?.oddsModifier ?? 0),
       timeLimit: template.timeLimit,
       status: 'pending',
     };
@@ -124,7 +123,7 @@ export function SequenceBuilder({
     setSelectedOutcomes(selectedOutcomes.filter((o) => o.id !== id));
   };
 
-  const loadSuggestedSequence = (outcomes: string[]) => {
+  const loadSequence = (outcomes: string[]) => {
     const sequence = outcomes
       .map((outcomeId, index) => {
         const template = OUTCOME_TEMPLATES.find((t) => t.id === outcomeId);
@@ -142,7 +141,7 @@ export function SequenceBuilder({
           id: `${template.id}-${Date.now()}-${index}`,
           category: template.category,
           description: processedDescription,
-          odds: randomizeOdds(template.odds),
+          odds: template.odds,
           timeLimit: template.timeLimit,
           status: 'pending' as const,
         };
@@ -244,12 +243,6 @@ export function SequenceBuilder({
     setShowChatResults(true);
   };
 
-  const totalOdds = selectedOutcomes.reduce(
-    (acc, outcome) => acc * outcome.odds,
-    1
-  );
-  const potentialWinnings = 10 * totalOdds;
-
   const categoryIcons = {
     'team-goals': '⚽',
     'team-fouls': '🟨',
@@ -308,6 +301,24 @@ export function SequenceBuilder({
     'player-goalkeeper': '🧤 Goalkeeper Actions',
   };
 
+  const MAX_EVENT_ODD = 5;
+  // Calculate difficulty multiplier (lower odds = harder = higher payout)
+  // Start with higher base and multiply by inverse of each odd
+  const difficultyMultiplier = selectedOutcomes.reduce(
+    (acc, o) => acc * (MAX_EVENT_ODD / o.odds),
+    1
+  );
+
+  // 2. Calculate bonus multiplier for sequences longer than 3 steps (5% per additional step)
+  const lengthBonus =
+    selectedOutcomes.length > 3 ? 0.05 * (selectedOutcomes.length - 3) : 0;
+
+  // 3. Calculate potential payout: stake * difficulty multiplier * (1 + bonus)
+  const potentialGains =
+    selectedOutcomes.length >= 3
+      ? initialStake * difficultyMultiplier * (1 + lengthBonus)
+      : 0;
+
   return (
     <div className='min-h-screen flex flex-col p-4 max-w-md mx-auto pb-28'>
       <div className='flex items-center gap-3 mb-6 mt-2'>
@@ -322,8 +333,63 @@ export function SequenceBuilder({
         </div>
       </div>
 
+      {/* Initial Stake Input */}
+      <div className='bg-gradient-to-br from-[#1a2f4d] to-[#0f1f3d] rounded-2xl p-4 mb-4 border border-cyan-500/30'>
+        <label className='text-white text-sm mb-2 block flex items-center gap-2'>
+          Set your stake
+        </label>
+        <div className='relative'>
+          <span className='absolute left-4 top-1/2 -translate-y-1/2 text-cyan-400 text-lg'>
+            €
+          </span>
+          <input
+            type='number'
+            min='1'
+            step='10'
+            value={initialStake || ''}
+            onChange={(e) => {
+              const value = parseFloat(e.target.value);
+              if (value > 0 || e.target.value === '') {
+                setInitialStake(value || 0);
+              }
+            }}
+            onBlur={(e) => {
+              const value = parseFloat(e.target.value);
+              if (!value || value <= 0) {
+                setInitialStake(0);
+              }
+            }}
+            placeholder='10.00'
+            className='w-full bg-[#0f1f3d] text-white text-lg placeholder-gray-500 rounded-xl pl-10 pr-4 py-3 border border-cyan-500/30 focus:border-cyan-500/60 focus:outline-none'
+          />
+        </div>
+        {initialStake > 0 && selectedOutcomes.length > 0 && (
+          <div className='pt-3 border-t border-gray-700'>
+            <div className='flex items-center justify-between mb-2'>
+              <span className='text-gray-400'>Your stake</span>
+              <span className='text-cyan-400'>€{initialStake.toFixed(2)}</span>
+            </div>
+            <div className='flex items-center justify-between mb-2'>
+              <span className='text-gray-400'>Potential gains</span>
+              <span className='text-green-400'>
+                €{potentialGains.toFixed(2)}
+              </span>
+            </div>
+            <div className='flex items-center justify-between'>
+              <span className='text-gray-400'>Bonus (&gt;3 outcomes)</span>
+              <span className='text-green-400'>
+                {selectedOutcomes.length > 3
+                  ? `+${((selectedOutcomes.length - 3) * 5).toFixed(0)}`
+                  : 0}
+                %
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* My Placed Bets */}
-      {activeBets.length > 0 && (
+      {/* {activeBets.length > 0 && (
         <div className='mb-4 bg-gradient-to-br from-[#1a2f4d] to-[#0f1f3d] rounded-2xl p-4 border border-cyan-500/30'>
           <div className='flex items-center justify-between mb-3'>
             <h3 className='text-white flex items-center gap-2'>
@@ -335,7 +401,11 @@ export function SequenceBuilder({
 
           <div className='space-y-2'>
             {activeBets.slice(0, 2).map((bet) => (
-              <div key={bet.id} className='bg-[#0f1f3d] rounded-xl p-3'>
+              <div
+                key={bet.id}
+                className='bg-[#0f1f3d] rounded-xl p-3'
+                onClick={() => loadSequence(bet.sequence.map((o) => o.id))}
+              >
                 <div className='flex items-start justify-between mb-2'>
                   <p className='text-white text-sm flex-1'>{bet.matchName}</p>
                   <span
@@ -370,7 +440,7 @@ export function SequenceBuilder({
             </p>
           )}
         </div>
-      )}
+      )} */}
 
       {selectedOutcomes.length > 0 && (
         <div className='bg-gradient-to-br from-[#1a2f4d] to-[#0f1f3d] rounded-2xl p-4 mb-4 border border-cyan-500/30'>
@@ -415,21 +485,6 @@ export function SequenceBuilder({
               </div>
             ))}
           </div>
-
-          <div className='pt-3 border-t border-gray-700'>
-            <div className='flex items-center justify-between mb-2'>
-              <span className='text-gray-400'>Individual Bets</span>
-              <span className='text-cyan-400'>
-                {selectedOutcomes.length} × €10.00
-              </span>
-            </div>
-            <div className='flex items-center justify-between'>
-              <span className='text-gray-400'>Boost (&gt;3 outcomes)</span>
-              <span className='text-green-400'>
-                +{((selectedOutcomes.length - 3) * 5).toFixed(0)}%
-              </span>
-            </div>
-          </div>
         </div>
       )}
 
@@ -469,7 +524,7 @@ export function SequenceBuilder({
                 return (
                   <button
                     key={index}
-                    onClick={() => loadSuggestedSequence(seq.outcomes)}
+                    onClick={() => loadSequence(seq.outcomes)}
                     className='w-full bg-gradient-to-br from-[#1a2f4d] to-[#0f1f3d] border border-orange-500/30 rounded-xl p-3 text-left hover:border-orange-500/60 transition-all'
                   >
                     <div className='flex items-start justify-between mb-2'>
@@ -519,7 +574,7 @@ export function SequenceBuilder({
               {FRIEND_SEQUENCES.map((seq, index) => (
                 <button
                   key={index}
-                  onClick={() => loadSuggestedSequence(seq.outcomes)}
+                  onClick={() => loadSequence(seq.outcomes)}
                   className='w-full bg-gradient-to-br from-[#1a2f4d] to-[#0f1f3d] border border-purple-500/30 rounded-xl p-3 text-left hover:border-purple-500/60 transition-all'
                 >
                   <div className='flex items-start justify-between mb-2'>
@@ -693,9 +748,7 @@ export function SequenceBuilder({
                   return (
                     <button
                       key={template.id}
-                      onClick={() =>
-                        !isAlreadySelected && handleOutcomeClick(template)
-                      }
+                      onClick={() => handleOutcomeClick(template)}
                       // disabled={isAlreadySelected}
                       className={`bg-[#1a2f4d] text-white p-3 rounded-xl text-sm text-left transition-all relative ${
                         isAlreadySelected
@@ -761,9 +814,9 @@ export function SequenceBuilder({
         <div className='fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[#0a1628] via-[#0a1628] to-transparent max-w-md mx-auto'>
           <Button
             onClick={() => onComplete(selectedOutcomes)}
-            disabled={selectedOutcomes.length < 3}
+            disabled={selectedOutcomes.length < 3 || initialStake <= 0}
             className={`w-full py-6 rounded-2xl shadow-lg ${
-              selectedOutcomes.length >= 3
+              selectedOutcomes.length >= 3 && initialStake > 0
                 ? 'bg-gradient-to-r from-cyan-400 to-green-400 hover:from-cyan-500 hover:to-green-500 text-[#0a1628] shadow-cyan-500/50'
                 : 'bg-gray-600 text-gray-400 cursor-not-allowed'
             }`}
@@ -775,7 +828,9 @@ export function SequenceBuilder({
                   ? `Add ${3 - selectedOutcomes.length} more outcome${
                       3 - selectedOutcomes.length !== 1 ? 's' : ''
                     }`
-                  : `Place Bet (€${potentialWinnings.toFixed(2)} max)`}
+                  : initialStake <= 0
+                  ? 'Set initial stake to continue'
+                  : `Place Bet (€${potentialGains.toFixed(2)} max)`}
               </span>
             </div>
           </Button>
@@ -800,6 +855,7 @@ export function SequenceBuilder({
           onSelectPlayer={handlePlayerSelect}
           team1Name={match.player1}
           team2Name={match.player2}
+          template={pendingTemplate}
           bothTeams={pendingTemplate.playerSelectionTeam === 'both'}
           teamFilter={
             pendingTemplate.playerSelectionTeam !== 'both'

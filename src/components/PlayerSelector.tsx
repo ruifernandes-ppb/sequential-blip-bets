@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { X, Search, User } from 'lucide-react';
 import { getMatchPlayers, type Player } from '../fixtures/players';
+import { OutcomeTemplate } from '../data/outcomeTemplates';
 
 interface PlayerSelectorProps {
+  matchId: string | number;
+  template?: OutcomeTemplate;
   isOpen: boolean;
   onClose: () => void;
   onSelectPlayer: (player: Player) => void;
@@ -10,10 +13,6 @@ interface PlayerSelectorProps {
   team2Name: string;
   bothTeams?: boolean; // If true, show both teams, if false show only one team
   teamFilter?: 'player1' | 'player2';
-  match?: any;
-  matchId?: string | number | null; // Optional match ID to load specific lineup
-  team?: 'player1' | 'player2' | 'both';
-  onSelect?: (player: Player) => void;
 }
 
 export function PlayerSelector({
@@ -24,10 +23,8 @@ export function PlayerSelector({
   team2Name,
   bothTeams = true,
   teamFilter,
-  match,
   matchId,
-  team,
-  onSelect,
+  template,
 }: PlayerSelectorProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTeam, setSelectedTeam] = useState<
@@ -36,7 +33,7 @@ export function PlayerSelector({
 
   // Load players dynamically based on matchId
   const { team1Players, team2Players } = getMatchPlayers(
-    matchId || null,
+    matchId,
     team1Name,
     team2Name
   );
@@ -183,12 +180,16 @@ export function PlayerSelector({
                         >
                           {player.position}
                         </div>
-                        <span className='text-cyan-400 text-sm'>
-                          #{player.number}
-                        </span>
+                        {template?.odds && (
+                          <span className='text-cyan-400 text-sm'>
+                            {(
+                              template.odds + (player.oddsModifier ?? 0)
+                            ).toFixed(2)}
+                          </span>
+                        )}
                       </div>
                       <p className='text-white text-sm mb-1'>
-                        {player.name}
+                        #{player.number} - {player.name}
                         {player.isCaptain && ' (C)'}
                       </p>
                       <p className='text-gray-400 text-xs'>

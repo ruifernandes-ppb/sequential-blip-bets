@@ -176,17 +176,13 @@ export default function App() {
             initialSequence={sequence}
             initialStake={INITIAL_STAKE}
             onComplete={handleWatchingComplete}
-            onBack={() => setCurrentScreen('sequence-builder')}
+            onBack={() => setCurrentScreen('event-selection')}
           />
         )}
 
       {currentScreen === 'result' && selectedMatch && (
         <ResultScreen
-          match={selectedMatch}
-          betHistory={betHistory}
-          totalPoints={totalPoints}
-          correctAnswers={betHistory.filter((b) => b.correct).length}
-          onPlayAgain={handlePlayAgain}
+          totalRuns={totalPoints}
           onGoToOverview={handlePlayAgain}
           finalWinnings={currentWinnings}
           initialStake={INITIAL_STAKE}

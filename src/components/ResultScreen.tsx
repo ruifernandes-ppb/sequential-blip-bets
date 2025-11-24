@@ -1,87 +1,114 @@
-import { X, Share2, Bell } from 'lucide-react';
+import { Trophy, TrendingUp, Target, ArrowRight } from 'lucide-react';
 import { BetResult, Match } from '../App';
 import { Button } from './ui/button';
 
 interface ResultScreenProps {
-  match: Match;
-  betHistory: BetResult[];
-  totalPoints: number;
-  correctAnswers: number;
-  onPlayAgain: () => void;
+  totalRuns: number;
   onGoToOverview: () => void;
   finalWinnings: number;
   initialStake: number;
 }
 
 export function ResultScreen({
-  match,
-  betHistory,
-  totalPoints,
-  correctAnswers,
-  onPlayAgain,
+  totalRuns,
   onGoToOverview,
   finalWinnings,
   initialStake,
 }: ResultScreenProps) {
-  const maxPoints = betHistory.length * 100;
-  const hatTricks = Math.floor(correctAnswers / 3);
-  const leaderboardRanking = Math.floor(Math.random() * 2000) + 1000;
-  const topPercentage = Math.floor(Math.random() * 30) + 70;
-  const lastBetCorrect =
-    betHistory.length > 0 && betHistory[betHistory.length - 1].correct;
-  const profit = finalWinnings - initialStake;
+  const netProfit = finalWinnings - initialStake;
+  const isProfitable = netProfit > 0;
 
   return (
     <div className='min-h-screen flex flex-col p-4 max-w-md mx-auto'>
       {/* Header */}
-      <div className='flex items-center justify-between mb-6 mt-2'>
-        <div className='flex-1'></div>
-        <h1 className='text-white'>Live Betting</h1>
-        <button className='text-white p-2'>
-          <Share2 className='w-5 h-5' />
-        </button>
+      <div className='text-center mb-8 mt-6'>
+        <Trophy
+          className={`w-16 h-16 mx-auto mb-4 ${
+            isProfitable ? 'text-yellow-400' : 'text-gray-400'
+          }`}
+        />
+        <h1 className='text-white text-2xl mb-2'>
+          {isProfitable ? 'Great Performance!' : 'Good Try!'}
+        </h1>
+        <p className='text-gray-400'>Sequence complete</p>
       </div>
 
-      {/* Result Title */}
-      <div className='text-center mb-8'>
-        <h2 className='text-white text-4xl mb-3'>
-          {lastBetCorrect ? 'LUCKY!' : 'UNLUCKY!'}
-        </h2>
-        <p className='text-gray-300'>
-          {lastBetCorrect
-            ? 'Great job! You made it through all the bets!'
-            : 'Try again soon – and see if you can go one better.'}
-        </p>
-      </div>
-
-      {/* Financial Summary */}
-      <div className='bg-gradient-to-br from-[#1a2f4d] to-[#0f1f3d] rounded-3xl p-6 mb-4 border border-cyan-500/30'>
-        <h3 className='text-white mb-4 text-center'>Your Winnings</h3>
-        <div className='text-center mb-4'>
-          <div className='text-5xl text-cyan-400 mb-2'>
-            €{finalWinnings.toFixed(2)}
-          </div>
-          <div
-            className={`text-sm ${profit >= 0 ? 'text-green-400' : 'text-red-400'
-              }`}
+      {/* Main Stats */}
+      <div className='space-y-3 mb-6'>
+        {/* Final Winnings */}
+        <div
+          className={`rounded-2xl p-6 border-2 ${
+            isProfitable
+              ? 'bg-gradient-to-br from-green-900/40 to-emerald-900/40 border-green-500'
+              : 'bg-gradient-to-br from-red-900/40 to-orange-900/40 border-red-500'
+          }`}
+        >
+          <p className='text-gray-300 text-sm mb-2'>Final Balance</p>
+          <p
+            className={`text-4xl mb-2 ${
+              isProfitable ? 'text-green-400' : 'text-red-400'
+            }`}
           >
-            {profit >= 0 ? '+' : ''}€{profit.toFixed(2)} (
-            {profit >= 0 ? 'Profit' : 'Loss'})
-          </div>
-        </div>
-        <div className='flex justify-between text-sm pt-3 border-t border-gray-700'>
-          <span className='text-gray-400'>Initial Stake:</span>
-          <span className='text-white'>€{initialStake.toFixed(2)}</span>
+            €{finalWinnings.toFixed(2)}
+          </p>
+          {finalWinnings > 0 && (
+            <div className='flex items-center gap-2'>
+              <span
+                className={`text-sm ${
+                  isProfitable ? 'text-green-400' : 'text-red-400'
+                }`}
+              >
+                {isProfitable ? '+' : ''}€{netProfit.toFixed(2)} (
+                {isProfitable ? '+' : ''}
+                {((netProfit / initialStake) * 100).toFixed(0)}%)
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
-      <Button
-        onClick={onGoToOverview}
-        variant='outline'
-        className='w-full border-2 border-cyan-400 text-cyan-400 hover:bg-cyan-400/10 py-6 rounded-2xl bg-transparent'
-      >
-        Go to main page
-      </Button>
+      {/* Performance Breakdown */}
+      <div className='bg-[#1a2f4d]/50 rounded-xl p-4 mb-6 border border-cyan-500/20'>
+        <h3 className='text-white mb-3 flex items-center gap-2'>
+          <TrendingUp className='w-4 h-4 text-cyan-400' />
+          Summary
+        </h3>
+        <div className='space-y-2'>
+          <div className='flex items-center justify-between'>
+            <span className='text-gray-400 text-sm'>Initial Stake</span>
+            <span className='text-white text-sm'>
+              €{initialStake.toFixed(2)}
+            </span>
+          </div>
+          <div className='flex items-center justify-between'>
+            <span className='text-gray-400 text-sm'>Total runs</span>
+            <span className='text-white text-sm'>{totalRuns}</span>
+          </div>
+          <div className='flex items-center justify-between pt-2 border-t border-gray-700'>
+            <span className='text-gray-300'>Net Profit/Loss</span>
+            <span
+              className={`${isProfitable ? 'text-green-400' : 'text-red-400'}`}
+            >
+              {isProfitable
+                ? `+€${netProfit.toFixed(2)}`
+                : `-${initialStake.toFixed(2)}`}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className='space-y-3 mt-auto'>
+        <Button
+          onClick={onGoToOverview}
+          className='w-full bg-gradient-to-br from-[#1a2f4d] to-[#0f1f3d] border border-cyan-500/30 hover:border-cyan-500/60 text-white py-6 rounded-2xl'
+        >
+          <div className='flex items-center justify-center gap-2'>
+            <ArrowRight className='w-5 h-5 text-cyan-400' />
+            <span>Back to Main Menu</span>
+          </div>
+        </Button>
+      </div>
     </div>
   );
 }
