@@ -8,12 +8,15 @@ import {
   TrendingUp,
   Plus,
   EuroIcon,
+  BarChart3,
+  Target,
 } from 'lucide-react';
 import { Match, SequenceOutcome, BetResult } from '../App';
 import { Button } from './ui/button';
 import { PlayerSelector } from './PlayerSelector';
 import { OutcomeList } from './OutcomeList';
 import { OUTCOME_TEMPLATES, OutcomeTemplate } from '../data/outcomeTemplates';
+import { useBetStore } from '../stores/useBetStore';
 
 interface LiveWatchingProps {
   match: Match;
@@ -41,13 +44,15 @@ export function LiveWatching({
   const [sequence, setSequence] = useState<SequenceOutcome[]>(initialSequence);
   const [currentWinnings, setCurrentWinnings] = useState(initialStake);
   const [totalPoints, setTotalPoints] = useState(0);
-  const [adrenalineLevel, setAdrenalineLevel] = useState(0);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [showPlayerSelector, setShowPlayerSelector] = useState(false);
   const [pendingTemplate, setPendingTemplate] =
     useState<OutcomeTemplate | null>(null);
+  const [sequenceAttempts, setSequenceAttempts] = useState(0);
+
+  const recordSequenceAttempt = useBetStore((state) => state.recordSequenceAttempt);
+  const sequenceStats = useBetStore((state) => state.sequenceStats);
 
   const CORRECT_PENALTY_MULTIPLIER = 1; // Keep 100% of winnings
   const WRONG_ANSWER_PENALTY = 0.85; // Keep 85% of winnings
@@ -62,131 +67,143 @@ export function LiveWatching({
   }, []);
 
   const processNextOutcome = () => {
-    const nextPending = sequence.find((o) => o.status === 'pending');
-    if (!nextPending) return;
+    setSequence((currentSequence) => {
+      const nextPending = currentSequence.find((o) => o.status === 'pending');
+      if (!nextPending) return currentSequence;
 
-    // Set to checking state
-    setSequence((prev) =>
-      prev.map((o) =>
+      // Set to checking state
+      const updatedSequence = currentSequence.map((o) =>
         o.id === nextPending.id ? { ...o, status: 'checking' as const } : o
-      )
-    );
-    setIsProcessing(true);
+      );
 
-    // Simulate checking with countdown
-    let timeRemaining = nextPending.timeLimit;
-    const checkInterval = setInterval(() => {
-      timeRemaining--;
+      // Simulate checking with countdown
+      let timeRemaining = nextPending.timeLimit;
+      const checkInterval = setInterval(() => {
+        timeRemaining--;
 
-      if (timeRemaining <= 3) {
-        setAdrenalineLevel((prev) => Math.min(100, prev + 5));
-      }
+        if (timeRemaining <= 0) {
+          clearInterval(checkInterval);
+          resolveOutcome(nextPending);
+        }
+      }, 1000);
 
-      if (timeRemaining <= 0) {
-        clearInterval(checkInterval);
-        resolveOutcome(nextPending);
-      }
-    }, 1000);
+      return updatedSequence;
+    });
   };
 
   const resolveOutcome = (outcome: SequenceOutcome) => {
     // Randomly determine if outcome happened (60% success rate for demo)
     const happened = Math.random() > 0.4;
 
-    setSequence((prev) =>
-      prev.map((o) =>
+    setSequence((prev) => {
+      const updatedSequence = prev.map((o) =>
         o.id === outcome.id
-          ? { ...o, status: happened ? 'success' : 'failed', result: happened }
+          ? { ...o, status: happened ? ('success' as const) : ('failed' as const), result: happened }
           : o
-      )
-    );
+      );
 
-    // Update winnings - each bet is independent
-    if (happened) {
-      const winAmount = currentWinnings * outcome.odds;
-      setCurrentWinnings(winAmount);
-      setTotalPoints((prev) => prev + 100);
-      setAdrenalineLevel((prev) => Math.min(100, prev + 15));
-    } else {
-      const penaltyAmount = currentWinnings * WRONG_ANSWER_PENALTY;
-      setCurrentWinnings(penaltyAmount);
-      setTotalPoints((prev) => Math.max(0, prev - 50));
-      setAdrenalineLevel((prev) => Math.max(0, prev - 10));
-    }
+      // Update winnings - each bet is independent
+      if (happened) {
+        const winAmount = currentWinnings * outcome.odds;
+        setCurrentWinnings(winAmount);
+        setTotalPoints((prev) => prev + 100);
+      } else {
+        // On failure, restart the sequence
+        const penaltyAmount = currentWinnings * WRONG_ANSWER_PENALTY;
+        setCurrentWinnings(penaltyAmount);
+        setTotalPoints((prev) => Math.max(0, prev - 50));
 
-    setIsProcessing(false);
+        // Record failed sequence attempt
+        setSequenceAttempts((prev) => prev + 1);
+        recordSequenceAttempt(false, penaltyAmount, initialStake);
+      }
 
-    // Check if all outcomes are resolved
-    const updatedSequence = sequence.map((o) =>
-      o.id === outcome.id
-        ? { ...o, status: happened ? 'success' : 'failed', result: happened }
-        : o
-    );
+      if (!happened) {
+        // Restart sequence after a delay
+        setTimeout(() => {
+          // Reset all outcomes back to pending
+          setSequence((prev) =>
+            prev.map((o) => ({
+              ...o,
+              status: 'pending' as const,
+              result: undefined,
+            }))
+          );
+          // Start processing again
+          setTimeout(() => {
+            processNextOutcome();
+          }, 1000);
+        }, 2000);
+        return updatedSequence;
+      }
 
-    const allResolved = updatedSequence.every(
-      (o) => o.status === 'success' || o.status === 'failed'
-    );
+      // Check if all outcomes are successful
+      const allResolved = updatedSequence.every(
+        (o) => o.status === 'success'
+      );
 
-    if (allResolved) {
-      // Complete the sequence with streak bonuses
-      const history: BetResult[] = updatedSequence.map((o) => ({
-        outcomeId: o.id,
-        description: o.description,
-        correct: o.result || false,
-        selectedOdds: o.odds,
-      }));
+      if (allResolved) {
+        // Complete the sequence with streak bonuses
+        const history: BetResult[] = updatedSequence.map((o) => ({
+          outcomeId: o.id,
+          description: o.description,
+          correct: o.result || false,
+          selectedOdds: o.odds,
+        }));
 
-      setTimeout(() => {
-        // Calculate final winnings with streak bonuses
-        let finalWinnings = initialStake;
+        setTimeout(() => {
+          // Calculate final winnings with streak bonuses
+          let finalWinnings = initialStake;
 
-        // Process each outcome
-        updatedSequence.forEach((o) => {
-          if (o.result) {
-            finalWinnings *= o.odds;
-          } else {
-            finalWinnings *= WRONG_ANSWER_PENALTY;
-          }
-        });
-
-        // Calculate streak bonuses
-        let maxStreak = 0;
-        let streakBonuses = 0;
-
-        updatedSequence.forEach((o, idx) => {
-          if (o.result) {
-            maxStreak++;
-
-            // Apply streak bonuses for consecutive correct
-            if (maxStreak === 2) {
-              streakBonuses += finalWinnings * 0.1; // +10% bonus
-            } else if (maxStreak === 3) {
-              streakBonuses += finalWinnings * 0.1; // additional +10% (20% total)
-            } else if (maxStreak >= 4) {
-              streakBonuses += finalWinnings * 0.1; // additional +10% (30% total)
+          // Process each outcome
+          updatedSequence.forEach((o) => {
+            if (o.result) {
+              finalWinnings *= o.odds;
             }
-          } else {
-            maxStreak = 0;
+          });
+
+          // Calculate streak bonuses
+          let maxStreak = 0;
+          let streakBonuses = 0;
+
+          updatedSequence.forEach((o, idx) => {
+            if (o.result) {
+              maxStreak++;
+
+              // Apply streak bonuses for consecutive correct
+              if (maxStreak === 2) {
+                streakBonuses += finalWinnings * 0.1; // +10% bonus
+              } else if (maxStreak === 3) {
+                streakBonuses += finalWinnings * 0.1; // additional +10% (20% total)
+              } else if (maxStreak >= 4) {
+                streakBonuses += finalWinnings * 0.1; // additional +10% (30% total)
+              }
+            }
+          });
+
+          // All correct bonus
+          const allCorrect = updatedSequence.every((o) => o.result);
+          if (allCorrect && updatedSequence.length > 0) {
+            streakBonuses += finalWinnings * (updatedSequence.length * 0.2);
           }
-        });
 
-        // All correct bonus
-        const allCorrect = updatedSequence.every((o) => o.result);
-        if (allCorrect && updatedSequence.length > 0) {
-          streakBonuses += finalWinnings * (updatedSequence.length * 0.2);
-        }
+          const totalWithBonuses = finalWinnings + streakBonuses;
 
-        const totalWithBonuses = finalWinnings + streakBonuses;
+          // Record successful sequence
+          setSequenceAttempts((prev) => prev + 1);
+          recordSequenceAttempt(true, totalWithBonuses, initialStake);
 
-        onComplete(history, totalWithBonuses, totalPoints);
-      }, 2000);
-    } else {
-      // Process next outcome immediately if correct, delay if wrong
-      const delayTime = happened ? 500 : 1500;
-      setTimeout(() => {
-        processNextOutcome();
-      }, delayTime);
-    }
+          onComplete(history, totalWithBonuses, totalPoints);
+        }, 2000);
+      } else {
+        // Process next outcome after a short delay
+        setTimeout(() => {
+          processNextOutcome();
+        }, 500);
+      }
+
+      return updatedSequence;
+    });
   };
 
   const handleDragStart = (index: number) => {
@@ -321,6 +338,51 @@ export function LiveWatching({
         </button>
       </div>
 
+      {/* Overall Statistics Card */}
+      <div className='bg-gradient-to-br from-purple-900/40 to-indigo-900/40 rounded-2xl p-4 mb-4 border border-purple-500/30'>
+        <div className='flex items-center gap-2 mb-3'>
+          <BarChart3 className='w-4 h-4 text-purple-400' />
+          <h3 className='text-white text-sm'>Your Statistics</h3>
+        </div>
+        <div className='grid grid-cols-2 gap-3'>
+          <div className='bg-black/20 rounded-xl p-3'>
+            <div className='flex items-center gap-1 mb-1'>
+              <Target className='w-3 h-3 text-green-400' />
+              <span className='text-gray-400 text-xs'>Success Rate</span>
+            </div>
+            <span className='text-green-400 text-lg'>
+              {sequenceStats.totalSequences > 0
+                ? ((sequenceStats.successfulSequences / sequenceStats.totalSequences) * 100).toFixed(0)
+                : 0}%
+            </span>
+            <p className='text-gray-500 text-xs mt-1'>
+              {sequenceStats.successfulSequences}/{sequenceStats.totalSequences} sequences
+            </p>
+          </div>
+
+          <div className='bg-black/20 rounded-xl p-3'>
+            <div className='flex items-center gap-1 mb-1'>
+              <Trophy className='w-3 h-3 text-cyan-400' />
+              <span className='text-gray-400 text-xs'>Total Earnings</span>
+            </div>
+            <span className={`text-lg ${sequenceStats.totalEarnings >= 0 ? 'text-cyan-400' : 'text-red-400'}`}>
+              €{sequenceStats.totalEarnings.toFixed(2)}
+            </span>
+            <p className='text-gray-500 text-xs mt-1'>
+              €{sequenceStats.totalSpent.toFixed(2)} spent
+            </p>
+          </div>
+        </div>
+
+        {sequenceAttempts > 0 && (
+          <div className='mt-3 pt-3 border-t border-purple-500/20'>
+            <p className='text-purple-300 text-xs'>
+              This session: {sequenceAttempts} attempt{sequenceAttempts !== 1 ? 's' : ''}
+            </p>
+          </div>
+        )}
+      </div>
+
       {/* Stats */}
       <div className='bg-gradient-to-br from-[#1a2f4d] to-[#0f1f3d] rounded-2xl p-4 mb-4 border border-cyan-500/30'>
         <div className='grid grid-cols-3 gap-3'>
@@ -374,14 +436,6 @@ export function LiveWatching({
             <div className='flex items-center justify-center gap-2'>
               <span className='text-2xl'>🔥</span>
               <div>
-                <p className='text-yellow-300 text-sm'>
-                  {currentStreak} in a row!
-                </p>
-                <p className='text-yellow-400 text-xs'>
-                  {currentStreak === 2 && '+10% streak bonus'}
-                  {currentStreak === 3 && '+20% streak bonus'}
-                  {currentStreak >= 4 && '+30% streak bonus'}
-                </p>
               </div>
             </div>
           </div>
@@ -397,31 +451,27 @@ export function LiveWatching({
             return (
               <div
                 key={outcome.id}
-                draggable={isPending && !isProcessing}
+                draggable={isPending}
                 onDragStart={() => handleDragStart(index)}
                 onDragOver={(e) => handleDragOver(e, index)}
                 onDragEnd={handleDragEnd}
                 className={`
                   flex items-center gap-3 rounded-xl p-4 transition-all
-                  ${
-                    isPending
-                      ? 'bg-[#1a2f4d] border border-gray-600 cursor-move hover:bg-[#243a5c]'
-                      : ''
+                  ${isPending
+                    ? 'bg-[#1a2f4d] border border-gray-600 cursor-move hover:bg-[#243a5c]'
+                    : ''
                   }
-                  ${
-                    isChecking
-                      ? 'bg-gradient-to-r from-orange-600/30 to-yellow-600/30 border-2 border-orange-400 animate-pulse'
-                      : ''
+                  ${isChecking
+                    ? 'bg-gradient-to-r from-orange-600/30 to-yellow-600/30 border-2 border-orange-400 animate-pulse'
+                    : ''
                   }
-                  ${
-                    isSuccess
-                      ? 'bg-gradient-to-r from-green-600/30 to-emerald-600/30 border-2 border-green-400'
-                      : ''
+                  ${isSuccess
+                    ? 'bg-gradient-to-r from-green-600/30 to-emerald-600/30 border-2 border-green-400'
+                    : ''
                   }
-                  ${
-                    isFailed
-                      ? 'bg-gradient-to-r from-red-600/30 to-rose-600/30 border-2 border-red-400'
-                      : ''
+                  ${isFailed
+                    ? 'bg-gradient-to-r from-red-600/30 to-rose-600/30 border-2 border-red-400'
+                    : ''
                   }
                   ${draggedIndex === index ? 'opacity-50' : ''}
                 `}
@@ -464,21 +514,19 @@ export function LiveWatching({
                 {/* Description */}
                 <div className='flex-1 min-w-0'>
                   <p
-                    className={`text-sm mb-1 ${
-                      isPending ? 'text-gray-300' : 'text-white'
-                    }`}
+                    className={`text-sm mb-1 ${isPending ? 'text-gray-300' : 'text-white'
+                      }`}
                   >
                     {outcome.description}
                   </p>
                   <div className='flex items-center gap-2'>
                     <span
-                      className={`text-xs ${
-                        isSuccess
-                          ? 'text-green-300'
-                          : isFailed
+                      className={`text-xs ${isSuccess
+                        ? 'text-green-300'
+                        : isFailed
                           ? 'text-red-300'
                           : 'text-gray-400'
-                      }`}
+                        }`}
                     >
                       {outcome.odds.toFixed(2)}x
                     </span>
@@ -495,9 +543,8 @@ export function LiveWatching({
 
                 {/* Icon */}
                 <span
-                  className={`text-2xl ${
-                    isPending ? 'opacity-50' : 'opacity-100'
-                  }`}
+                  className={`text-2xl ${isPending ? 'opacity-50' : 'opacity-100'
+                    }`}
                 >
                   {categoryIcons[outcome.category]}
                 </span>
@@ -506,23 +553,6 @@ export function LiveWatching({
           })}
         </div>
       </div>
-
-      {/* AI Suggestion */}
-      {pendingCount > 0 && !isProcessing && (
-        <div className='bg-purple-600/20 border border-purple-500/30 rounded-xl p-3 mb-4'>
-          <div className='flex items-start gap-2'>
-            <Zap className='w-4 h-4 text-purple-400 mt-0.5 flex-shrink-0' />
-            <div>
-              <p className='text-purple-300 text-xs mb-1'>AI Momentum Tip</p>
-              <p className='text-white text-sm'>
-                {/* {successCount >= 2
-                  ? "You're on fire! Consider cashing out to secure profits." */}
-                Reorder your timeline based on current match momentum.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Cash Out Button */}
       {completedCount > 0 && (
