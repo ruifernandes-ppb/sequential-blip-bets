@@ -34,7 +34,7 @@ const LIVE_MATCHES: Match[] = [
     isLive: true,
   },
   {
-    id: 2,
+    id: 'france-greece-2004',
     player1: 'France',
     player2: 'Greece',
     player1Sets: 1,
@@ -51,7 +51,7 @@ const LIVE_MATCHES: Match[] = [
 
 const UPCOMING_MATCHES: Match[] = [
   {
-    id: 3,
+    id: 'sweden-netherlands-2004',
     player1: 'Sweden',
     player2: 'Netherlands',
     player1Sets: 0,
@@ -65,7 +65,7 @@ const UPCOMING_MATCHES: Match[] = [
     isLive: false,
   },
   {
-    id: 4,
+    id: 'czechia-denmark-2004',
     player1: 'Czech Republic',
     player2: 'Denmark',
     player1Sets: 0,
