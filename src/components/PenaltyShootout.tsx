@@ -162,8 +162,12 @@ export function PenaltyShootout({ onBack, onComplete }: PenaltyShootoutProps) {
       }, 1000);
       return () => clearTimeout(timer);
     } else if (phase === "deciding" && timeRemaining === 0 && !hasDecided) {
-      // Auto-skip if time runs out
-      handlePrediction(true); // Default to "will score"
+      // Time ran out - count as failed bet
+      setHasDecided(true);
+      setHasLost(true);
+      setCurrentBalance(0);
+      setPotentialWinnings(0);
+      setPhase("finished");
     }
   }, [timeRemaining, hasDecided, phase]);
 
@@ -302,29 +306,32 @@ export function PenaltyShootout({ onBack, onComplete }: PenaltyShootoutProps) {
               <Trophy className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
               <h2 className="text-white text-2xl mb-2">Place Your Bet</h2>
               <p className="text-gray-400 text-sm mb-6">
-                Predict each penalty correctly to multiply your bet. One wrong
+                Predict each penalty correctly to win your bet. One wrong
                 prediction and you lose everything!
               </p>
             </div>
 
             {/* Bet Amount Input */}
-            <div className="mb-6">
-              <label className="text-gray-300 text-sm mb-2 block">
-                Bet Amount
-              </label>
-              <div className="relative flex items-center">
-                <span className="absolute left-4 text-cyan-400 text-2xl">
-                  €
-                </span>
-                <input
-                  type="number"
-                  value={betAmount}
-                  onChange={(e) => setBetAmount(e.target.value)}
-                  min="1"
-                  step="1"
-                  className="w-full bg-[#0f1f3d] text-white text-2xl rounded-xl px-4 py-4 pl-12 border border-cyan-500/30 focus:border-cyan-500/60 focus:outline-none"
-                  placeholder="10"
-                />
+            <div className="mb-6 flex justify-center">
+              <div className="flex items-center gap-4">
+                <label className="text-gray-300 text-sm whitespace-nowrap">
+                  Bet Amount
+                </label>
+                <div className="relative flex items-center justify-center w-32">
+                  <span className="absolute left-1/2 -translate-x-1/2 text-cyan-400 text-xl pointer-events-none flex items-center gap-1">
+                    <span>€</span>
+                    <span className="text-white">{betAmount || "10"}</span>
+                  </span>
+                  <input
+                    type="number"
+                    value={betAmount}
+                    onChange={(e) => setBetAmount(e.target.value)}
+                    min="1"
+                    step="1"
+                    className="w-full bg-[#0f1f3d] text-transparent text-xl rounded-xl py-3 px-3 border border-cyan-500/30 focus:border-cyan-500/60 focus:outline-none text-center caret-white"
+                    placeholder="10"
+                  />
+                </div>
               </div>
             </div>
 
@@ -409,7 +416,7 @@ export function PenaltyShootout({ onBack, onComplete }: PenaltyShootoutProps) {
                 </p>
               </div>
               <div className="text-center flex-1 min-w-0">
-                <div className="text-2xl mb-1">�󠁧󠁢󠁥󠁮󠁧󠁿</div>
+                <div className="text-2xl mb-1">🏴󠁧󠁢󠁥󠁮󠁧󠁿</div>
                 <p className="text-white text-xs sm:text-sm mb-1 truncate">
                   England
                 </p>
@@ -532,7 +539,7 @@ export function PenaltyShootout({ onBack, onComplete }: PenaltyShootoutProps) {
             <div className="flex-1 flex items-center justify-center">
               <div
                 className={`text-center p-8 rounded-2xl border-2 ${
-                  currentPenalty.result
+                  currentPenalty.correct
                     ? "bg-green-900/40 border-green-500"
                     : "bg-red-900/40 border-red-500"
                 }`}
@@ -688,7 +695,7 @@ export function PenaltyShootout({ onBack, onComplete }: PenaltyShootoutProps) {
                         {penalty.result ? "⚽" : "❌"}
                       </span>
                       <span className="text-xs text-gray-400">
-                        {penalty.team === "Portugal" ? "🇵🇹" : "�󠁧󠁢󠁥󠁮󠁧󠁿"}
+                        {penalty.team === "Portugal" ? "🇵🇹" : "🏴󠁧󠁢󠁥󠁮󠁧󠁿"}
                       </span>
                     </div>
                   ))}
