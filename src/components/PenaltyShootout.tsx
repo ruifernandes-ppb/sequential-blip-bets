@@ -655,7 +655,7 @@ export function PenaltyShootout({ onBack, onComplete }: PenaltyShootoutProps) {
                         : "text-green-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.5)]"
                     }`}
                   >
-                    €{currentBalance.toFixed(2)}
+                    {currentBalance.toFixed(2)}€
                   </p>
                   {hasLost && (
                     <p className="text-red-300 text-sm mt-2">
