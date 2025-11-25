@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   ArrowLeft,
   Target,
@@ -6,9 +6,9 @@ import {
   XCircle,
   Trophy,
   Timer,
-} from 'lucide-react';
-import { Button } from './ui/button';
-import { Progress } from './ui/progress';
+} from "lucide-react";
+import { Button } from "./ui/button";
+import { Progress } from "./ui/progress";
 
 interface PenaltyShootoutProps {
   onBack: () => void;
@@ -21,9 +21,9 @@ interface PenaltyShootoutProps {
 
 interface Penalty {
   id: number;
-  team: 'Portugal' | 'England';
+  team: "Portugal" | "England";
   player: string;
-  status: 'pending' | 'active' | 'completed';
+  status: "pending" | "active" | "completed";
   result?: boolean; // true = scored, false = missed
   historicalResult: boolean; // The actual historical result
   userPrediction?: boolean;
@@ -33,100 +33,100 @@ interface Penalty {
 const PENALTY_SHOOTOUT: Penalty[] = [
   {
     id: 1,
-    team: 'England',
-    player: 'David Beckham',
-    status: 'pending',
+    team: "England",
+    player: "David Beckham",
+    status: "pending",
     historicalResult: false,
   },
   {
     id: 2,
-    team: 'Portugal',
-    player: 'Deco',
-    status: 'pending',
+    team: "Portugal",
+    player: "Deco",
+    status: "pending",
     historicalResult: true,
   },
   {
     id: 3,
-    team: 'England',
-    player: 'Michael Owen',
-    status: 'pending',
+    team: "England",
+    player: "Michael Owen",
+    status: "pending",
     historicalResult: true,
   },
   {
     id: 4,
-    team: 'Portugal',
-    player: 'Simão Sabrosa',
-    status: 'pending',
+    team: "Portugal",
+    player: "Simão Sabrosa",
+    status: "pending",
     historicalResult: true,
   },
   {
     id: 5,
-    team: 'England',
-    player: 'Frank Lampard',
-    status: 'pending',
+    team: "England",
+    player: "Frank Lampard",
+    status: "pending",
     historicalResult: true,
   },
   {
     id: 6,
-    team: 'Portugal',
-    player: 'Rui Costa',
-    status: 'pending',
+    team: "Portugal",
+    player: "Rui Costa",
+    status: "pending",
     historicalResult: false,
   },
   {
     id: 7,
-    team: 'England',
-    player: 'John Terry',
-    status: 'pending',
+    team: "England",
+    player: "John Terry",
+    status: "pending",
     historicalResult: true,
   },
   {
     id: 8,
-    team: 'Portugal',
-    player: 'Cristiano Ronaldo',
-    status: 'pending',
+    team: "Portugal",
+    player: "Cristiano Ronaldo",
+    status: "pending",
     historicalResult: true,
   },
   {
     id: 9,
-    team: 'England',
-    player: 'Owen Hargreaves',
-    status: 'pending',
+    team: "England",
+    player: "Owen Hargreaves",
+    status: "pending",
     historicalResult: true,
   },
   {
     id: 10,
-    team: 'Portugal',
-    player: 'Maniche',
-    status: 'pending',
+    team: "Portugal",
+    player: "Maniche",
+    status: "pending",
     historicalResult: true,
   },
   {
     id: 11,
-    team: 'England',
-    player: 'Ashley Cole',
-    status: 'pending',
+    team: "England",
+    player: "Ashley Cole",
+    status: "pending",
     historicalResult: true,
   },
   {
     id: 12,
-    team: 'Portugal',
-    player: 'Hélder Postiga',
-    status: 'pending',
+    team: "Portugal",
+    player: "Hélder Postiga",
+    status: "pending",
     historicalResult: true,
   },
   {
     id: 13,
-    team: 'England',
-    player: 'Darius Vassell',
-    status: 'pending',
+    team: "England",
+    player: "Darius Vassell",
+    status: "pending",
     historicalResult: false,
   },
   {
     id: 14,
-    team: 'Portugal',
-    player: 'Ricardo',
-    status: 'pending',
+    team: "Portugal",
+    player: "Ricardo",
+    status: "pending",
     historicalResult: true,
   },
 ];
@@ -140,15 +140,15 @@ export function PenaltyShootout({ onBack, onComplete }: PenaltyShootoutProps) {
   const [timeRemaining, setTimeRemaining] = useState(DECISION_TIME);
   const [hasDecided, setHasDecided] = useState(false);
   const [showResult, setShowResult] = useState(false);
-  const [betAmount, setBetAmount] = useState<string>('10');
+  const [betAmount, setBetAmount] = useState<string>("10");
   const [initialStake, setInitialStake] = useState(0);
   const [currentBalance, setCurrentBalance] = useState(0);
   const [potentialWinnings, setPotentialWinnings] = useState(0);
   const [portugalScore, setPortugalScore] = useState(0);
   const [englandScore, setEnglandScore] = useState(0);
   const [phase, setPhase] = useState<
-    'setup' | 'deciding' | 'watching' | 'finished'
-  >('setup');
+    "setup" | "deciding" | "watching" | "finished"
+  >("setup");
   const [hasLost, setHasLost] = useState(false);
 
   const currentPenalty = penalties[currentPenaltyIndex];
@@ -156,14 +156,18 @@ export function PenaltyShootout({ onBack, onComplete }: PenaltyShootoutProps) {
 
   // Timer countdown
   useEffect(() => {
-    if (phase === 'deciding' && !hasDecided && timeRemaining > 0) {
+    if (phase === "deciding" && !hasDecided && timeRemaining > 0) {
       const timer = setTimeout(() => {
         setTimeRemaining(timeRemaining - 1);
       }, 1000);
       return () => clearTimeout(timer);
-    } else if (phase === 'deciding' && timeRemaining === 0 && !hasDecided) {
-      // Auto-skip if time runs out
-      handlePrediction(true); // Default to "will score"
+    } else if (phase === "deciding" && timeRemaining === 0 && !hasDecided) {
+      // Time ran out - count as failed bet
+      setHasDecided(true);
+      setHasLost(true);
+      setCurrentBalance(0);
+      setPotentialWinnings(0);
+      setPhase("finished");
     }
   }, [timeRemaining, hasDecided, phase]);
 
@@ -177,12 +181,12 @@ export function PenaltyShootout({ onBack, onComplete }: PenaltyShootoutProps) {
     updatedPenalties[currentPenaltyIndex] = {
       ...updatedPenalties[currentPenaltyIndex],
       userPrediction: willScore,
-      status: 'active',
+      status: "active",
     };
     setPenalties(updatedPenalties);
 
     // Move to watching phase
-    setPhase('watching');
+    setPhase("watching");
   };
 
   const simulatePenaltyResult = () => {
@@ -197,14 +201,14 @@ export function PenaltyShootout({ onBack, onComplete }: PenaltyShootoutProps) {
       ...penalty,
       result: scored,
       correct: correct,
-      status: 'completed',
+      status: "completed",
     };
 
     setPenalties(updatedPenalties);
 
     // Update scores
     if (scored) {
-      if (penalty.team === 'Portugal') {
+      if (penalty.team === "Portugal") {
         setPortugalScore(portugalScore + 1);
       } else {
         setEnglandScore(englandScore + 1);
@@ -233,21 +237,21 @@ export function PenaltyShootout({ onBack, onComplete }: PenaltyShootoutProps) {
     setTimeout(() => {
       if (!correct) {
         // Game over - player lost
-        setPhase('finished');
+        setPhase("finished");
       } else if (isLastPenalty) {
-        setPhase('finished');
+        setPhase("finished");
       } else {
         setCurrentPenaltyIndex(currentPenaltyIndex + 1);
         setTimeRemaining(DECISION_TIME);
         setHasDecided(false);
         setShowResult(false);
-        setPhase('deciding');
+        setPhase("deciding");
       }
     }, 3000);
   };
 
   useEffect(() => {
-    if (phase === 'watching' && !showResult) {
+    if (phase === "watching" && !showResult) {
       // Simulate penalty kick with delay
       const delay = setTimeout(() => {
         simulatePenaltyResult();
@@ -257,7 +261,7 @@ export function PenaltyShootout({ onBack, onComplete }: PenaltyShootoutProps) {
   }, [phase, showResult]);
 
   useEffect(() => {
-    if (phase === 'finished') {
+    if (phase === "finished") {
       const correctCount = penalties.filter((p) => p.correct).length;
       setTimeout(() => {
         onComplete(currentBalance, correctCount, penalties.length);
@@ -265,7 +269,7 @@ export function PenaltyShootout({ onBack, onComplete }: PenaltyShootoutProps) {
     }
   }, [phase]);
 
-  const completedPenalties = penalties.filter((p) => p.status === 'completed');
+  const completedPenalties = penalties.filter((p) => p.status === "completed");
   const correctPredictions = completedPenalties.filter((p) => p.correct).length;
 
   const timerProgress = (timeRemaining / DECISION_TIME) * 100;
@@ -277,100 +281,103 @@ export function PenaltyShootout({ onBack, onComplete }: PenaltyShootoutProps) {
       setInitialStake(amount);
       setCurrentBalance(amount);
       setPotentialWinnings(amount * PRIZE_MULTIPLIER);
-      setPhase('deciding');
+      setPhase("deciding");
     }
   };
 
   return (
-    <div className='min-h-screen flex flex-col p-4 max-w-md mx-auto'>
+    <div className="min-h-screen flex flex-col p-4 max-w-md mx-auto">
       {/* Header */}
-      <div className='flex items-center gap-3 mb-6 mt-2'>
-        <button onClick={onBack} className='text-white p-2'>
-          <ArrowLeft className='w-5 h-5' />
+      <div className="flex items-center gap-3 mb-6 mt-2">
+        <button onClick={onBack} className="text-white p-2">
+          <ArrowLeft className="w-5 h-5" />
         </button>
-        <div className='flex-1'>
-          <h1 className='text-white'>Penalty Shootout</h1>
-          <p className='text-gray-400 text-sm'>UEFA Euro 2004 Quarter-final</p>
+        <div className="flex-1">
+          <h1 className="text-white">Penalty Shootout</h1>
+          <p className="text-gray-400 text-sm">UEFA Euro 2004 Quarter-final</p>
         </div>
       </div>
 
       {/* Setup Phase - Bet Amount Input */}
-      {phase === 'setup' && (
-        <div className='flex-1 flex flex-col items-center justify-center'>
-          <div className='w-full bg-gradient-to-br from-[#1a2f4d] to-[#0f1f3d] rounded-2xl p-6 mb-4 border border-cyan-500/30'>
-            <div className='text-center mb-6'>
-              <Trophy className='w-16 h-16 text-yellow-400 mx-auto mb-4' />
-              <h2 className='text-white text-2xl mb-2'>Place Your Bet</h2>
-              <p className='text-gray-400 text-sm mb-6'>
-                Predict each penalty correctly to multiply your bet. One wrong
+      {phase === "setup" && (
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <div className="w-full bg-gradient-to-br from-[#1a2f4d] to-[#0f1f3d] rounded-2xl p-6 mb-4 border border-cyan-500/30">
+            <div className="text-center mb-6">
+              <Trophy className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
+              <h2 className="text-white text-2xl mb-2">Place Your Bet</h2>
+              <p className="text-gray-400 text-sm mb-6">
+                Predict each penalty correctly to win your bet. One wrong
                 prediction and you lose everything!
               </p>
             </div>
 
             {/* Bet Amount Input */}
-            <div className='mb-6'>
-              <label className='text-gray-300 text-sm mb-2 block'>
-                Bet Amount
-              </label>
-              <div className='relative flex items-center'>
-                <span className='absolute left-4 text-cyan-400 text-2xl'>
-                  €
-                </span>
-                <input
-                  type='number'
-                  value={betAmount}
-                  onChange={(e) => setBetAmount(e.target.value)}
-                  min='1'
-                  step='1'
-                  className='w-full bg-[#0f1f3d] text-white text-2xl rounded-xl pl-10 px-4 py-4 pl-12 border border-cyan-500/30 focus:border-cyan-500/60 focus:outline-none'
-                  placeholder='10'
-                />
+            <div className="mb-6 flex justify-center">
+              <div className="flex items-center gap-4">
+                <label className="text-gray-300 text-sm whitespace-nowrap">
+                  Bet Amount
+                </label>
+                <div className="relative flex items-center justify-center w-32">
+                  <span className="absolute left-1/2 -translate-x-1/2 text-cyan-400 text-xl pointer-events-none flex items-center gap-1">
+                    <span>€</span>
+                    <span className="text-white">{betAmount || "10"}</span>
+                  </span>
+                  <input
+                    type="number"
+                    value={betAmount}
+                    onChange={(e) => setBetAmount(e.target.value)}
+                    min="1"
+                    step="1"
+                    className="w-full bg-[#0f1f3d] text-transparent text-xl rounded-xl py-3 px-3 border border-cyan-500/30 focus:border-cyan-500/60 focus:outline-none text-center caret-white"
+                    placeholder="10"
+                  />
+                </div>
               </div>
             </div>
 
             {/* Prize Display */}
-            <div className='bg-gradient-to-br from-yellow-900/40 to-orange-900/40 rounded-xl p-4 mb-6 border border-yellow-500/30'>
-              <p className='text-gray-300 text-sm mb-2 text-center'>
+            <div className="bg-gradient-to-br from-yellow-900/40 to-orange-900/40 rounded-xl p-4 mb-6 border border-yellow-500/30">
+              <p className="text-gray-300 text-sm mb-2 text-center">
                 Prize Pool
               </p>
-              <p className='text-yellow-400 text-3xl text-center font-bold'>
-                €{(parseFloat(betAmount || '0') * PRIZE_MULTIPLIER).toFixed(2)}
+              <p className="text-yellow-400 text-3xl text-center font-bold">
+                €{(parseFloat(betAmount || "0") * PRIZE_MULTIPLIER).toFixed(2)}
               </p>
-              <p className='text-gray-400 text-xs text-center mt-2'>
+              <p className="text-gray-400 text-xs text-center mt-2">
                 Win if you predict all penalties correctly!
               </p>
             </div>
 
             {/* Potential Return */}
-            <div className='bg-green-900/40 rounded-xl p-4 mb-6 border border-green-500/30'>
-              <p className='text-gray-300 text-sm mb-2 text-center'>
+            <div className="bg-green-900/40 rounded-xl p-4 mb-6 border border-green-500/30">
+              <p className="text-gray-300 text-sm mb-2 text-center">
                 Your Potential Return
               </p>
-              <p className='text-green-400 text-2xl text-center'>
+              <p className="text-green-400 text-2xl text-center">
                 €
                 {(
-                  parseFloat(betAmount || '0') * PRIZE_MULTIPLIER -
-                  parseFloat(betAmount || '0')
-                ).toFixed(2)}{' '}
+                  parseFloat(betAmount || "0") * PRIZE_MULTIPLIER -
+                  parseFloat(betAmount || "0")
+                ).toFixed(2)}{" "}
                 profit
               </p>
-              <p className='text-gray-400 text-xs text-center mt-2'>
-                €{(parseFloat(betAmount || '0') * PRIZE_MULTIPLIER).toFixed(2)}{' '}
-                prize - €{parseFloat(betAmount || '0').toFixed(2)} bet = €
+              <p className="text-gray-400 text-xs text-center mt-2">
+                €{(parseFloat(betAmount || "0") * PRIZE_MULTIPLIER).toFixed(2)}{" "}
+                prize - €{parseFloat(betAmount || "0").toFixed(2)} bet = €
                 {(
-                  parseFloat(betAmount || '0') * PRIZE_MULTIPLIER -
-                  parseFloat(betAmount || '0')
-                ).toFixed(2)}{' '}
+                  parseFloat(betAmount || "0") * PRIZE_MULTIPLIER -
+                  parseFloat(betAmount || "0")
+                ).toFixed(2)}{" "}
                 net win
               </p>
             </div>
 
             {/* Game Rules */}
-            <div className='bg-red-900/40 rounded-xl p-4 mb-6 border border-red-500/30'>
-              <p className='text-red-300 text-sm text-center font-semibold mb-2'>
+            <div className="bg-red-900/40 rounded-xl p-4 mb-6 border border-red-500/30">
+              <p className="text-red-300 text-sm text-center font-semibold mb-2">
                 ⚠️ All or Nothing
               </p>
-              <p className='text-gray-300 text-xs text-center'>
+              <p className="text-gray-300 text-xs text-center">
                 One wrong prediction = Instant loss. You must predict all
                 penalties correctly to win the prize!
               </p>
@@ -380,7 +387,7 @@ export function PenaltyShootout({ onBack, onComplete }: PenaltyShootoutProps) {
             <Button
               onClick={handleStartGame}
               disabled={!betAmount || parseFloat(betAmount) <= 0}
-              className='w-full bg-gradient-to-r from-cyan-400 to-green-400 hover:from-cyan-500 hover:to-green-500 text-[#0a1628] py-6 rounded-2xl text-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed'
+              className="w-full bg-gradient-to-r from-cyan-400 to-green-400 hover:from-cyan-500 hover:to-green-500 text-[#0a1628] py-6 rounded-2xl text-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Start Shootout
             </Button>
@@ -388,208 +395,208 @@ export function PenaltyShootout({ onBack, onComplete }: PenaltyShootoutProps) {
         </div>
       )}
 
-      {phase !== 'setup' && (
+      {phase !== "setup" && (
         <>
           {/* Match Score */}
-          <div className='bg-gradient-to-br from-[#1a2f4d] to-[#0f1f3d] rounded-2xl p-4 sm:p-6 mb-4 border border-cyan-500/30 overflow-hidden'>
-            <div className='flex items-center justify-between mb-4'>
-              <div className='text-center flex-1 min-w-0'>
-                <div className='text-2xl mb-1'>🇵🇹</div>
-                <p className='text-white text-xs sm:text-sm mb-1 truncate'>
+          <div className="bg-gradient-to-br from-[#1a2f4d] to-[#0f1f3d] rounded-2xl p-4 sm:p-6 mb-4 border border-cyan-500/30 overflow-hidden">
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-center flex-1 min-w-0">
+                <div className="text-2xl mb-1">🇵🇹</div>
+                <p className="text-white text-xs sm:text-sm mb-1 truncate">
                   Portugal
                 </p>
-                <p className='text-cyan-400 text-2xl sm:text-3xl'>
+                <p className="text-cyan-400 text-2xl sm:text-3xl">
                   {portugalScore}
                 </p>
               </div>
-              <div className='flex flex-col items-center px-2 sm:px-4 flex-shrink-0'>
-                <Trophy className='w-6 h-6 sm:w-8 sm:h-8 text-yellow-400 mb-1' />
-                <p className='text-gray-400 text-xs whitespace-nowrap'>
+              <div className="flex flex-col items-center px-2 sm:px-4 flex-shrink-0">
+                <Trophy className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-400 mb-1" />
+                <p className="text-gray-400 text-xs whitespace-nowrap">
                   Penalties
                 </p>
               </div>
-              <div className='text-center flex-1 min-w-0'>
-                <div className='text-2xl mb-1'>🏴󠁧󠁢󠁥󠁮󠁧󠁿</div>
-                <p className='text-white text-xs sm:text-sm mb-1 truncate'>
+              <div className="text-center flex-1 min-w-0">
+                <div className="text-2xl mb-1">🏴󠁧󠁢󠁥󠁮󠁧󠁿</div>
+                <p className="text-white text-xs sm:text-sm mb-1 truncate">
                   England
                 </p>
-                <p className='text-cyan-400 text-2xl sm:text-3xl'>
+                <p className="text-cyan-400 text-2xl sm:text-3xl">
                   {englandScore}
                 </p>
               </div>
             </div>
 
             {/* Progress */}
-            <div className='border-t border-gray-700 pt-4'>
-              <div className='flex items-center justify-between text-xs sm:text-sm mb-2 gap-2'>
-                <span className='text-gray-400 truncate'>
+            <div className="border-t border-gray-700 pt-4">
+              <div className="flex items-center justify-between text-xs sm:text-sm mb-2 gap-2">
+                <span className="text-gray-400 truncate">
                   Penalty #{currentPenaltyIndex + 1}
                 </span>
-                <span className='text-cyan-400 whitespace-nowrap'>
+                <span className="text-cyan-400 whitespace-nowrap">
                   {correctPredictions} correct
                 </span>
               </div>
             </div>
           </div>
           {/* Current Balance */}
-          <div className='bg-gradient-to-br from-green-900/40 to-emerald-900/40 rounded-xl p-4 mb-4 border border-green-500/30'>
-            <div className='flex items-center justify-between mb-2'>
-              <span className='text-gray-300 text-sm'>Your Stake</span>
-              <span className='text-white text-xl'>
+          <div className="bg-gradient-to-br from-green-900/40 to-emerald-900/40 rounded-xl p-4 mb-4 border border-green-500/30">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-gray-300 text-sm">Your Stake</span>
+              <span className="text-white text-xl">
                 €{initialStake.toFixed(2)}
               </span>
             </div>
-            <div className='flex items-center justify-between'>
-              <span className='text-gray-300 text-sm'>Win Prize</span>
-              <span className='text-green-400 text-2xl font-bold'>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-300 text-sm">Win Prize</span>
+              <span className="text-green-400 text-2xl font-bold">
                 €{(initialStake * PRIZE_MULTIPLIER).toFixed(2)}
               </span>
             </div>
-            <div className='flex items-center justify-between mt-2 pt-2 border-t border-green-500/30'>
-              <span className='text-gray-400 text-xs'>
+            <div className="flex items-center justify-between mt-2 pt-2 border-t border-green-500/30">
+              <span className="text-gray-400 text-xs">
                 Net Profit if you win
               </span>
-              <span className='text-cyan-400 text-sm'>
+              <span className="text-cyan-400 text-sm">
                 €{(initialStake * PRIZE_MULTIPLIER - initialStake).toFixed(2)}
               </span>
             </div>
-          </div>{' '}
-          {phase === 'deciding' && !hasDecided && (
+          </div>{" "}
+          {phase === "deciding" && !hasDecided && (
             <>
               {/* Timer */}
-              <div className='bg-gradient-to-br from-orange-900/40 to-red-900/40 rounded-xl p-4 mb-4 border border-orange-500/30'>
-                <div className='flex items-center justify-between mb-2'>
-                  <div className='flex items-center gap-2'>
-                    <Timer className='w-5 h-5 text-orange-400' />
-                    <span className='text-white'>Make your prediction</span>
+              <div className="bg-gradient-to-br from-orange-900/40 to-red-900/40 rounded-xl p-4 mb-4 border border-orange-500/30">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Timer className="w-5 h-5 text-orange-400" />
+                    <span className="text-white">Make your prediction</span>
                   </div>
-                  <span className='text-orange-400 text-xl'>
+                  <span className="text-orange-400 text-xl">
                     {timeRemaining}s
                   </span>
                 </div>
-                <Progress value={timerProgress} className='h-2 bg-gray-700' />
+                <Progress value={timerProgress} className="h-2 bg-gray-700" />
               </div>
 
               {/* Current Penalty */}
-              <div className='bg-gradient-to-br from-[#1a2f4d] to-[#0f1f3d] rounded-2xl p-4 sm:p-6 mb-6 border border-cyan-500/30 overflow-hidden'>
-                <div className='text-center mb-6'>
-                  <div className='text-4xl mb-3'>
-                    {currentPenalty.team === 'Portugal' ? '🇵🇹' : '🏴󠁧󠁢󠁥󠁮󠁧󠁿'}
+              <div className="bg-gradient-to-br from-[#1a2f4d] to-[#0f1f3d] rounded-2xl p-4 sm:p-6 mb-6 border border-cyan-500/30 overflow-hidden">
+                <div className="text-center mb-6">
+                  <div className="text-4xl mb-3">
+                    {currentPenalty.team === "Portugal" ? "🇵🇹" : "🏴󠁧󠁢󠁥󠁮󠁧󠁿"}
                   </div>
-                  <h2 className='text-white text-lg sm:text-xl mb-1 truncate px-2'>
+                  <h2 className="text-white text-lg sm:text-xl mb-1 truncate px-2">
                     {currentPenalty.player}
                   </h2>
-                  <p className='text-gray-400 text-sm truncate'>
+                  <p className="text-gray-400 text-sm truncate">
                     {currentPenalty.team}
                   </p>
                 </div>
 
-                <div className='flex items-center justify-center gap-2 mb-6'>
-                  <Target className='w-5 h-5 text-cyan-400' />
-                  <p className='text-cyan-400'>Will this player score?</p>
+                <div className="flex items-center justify-center gap-2 mb-6">
+                  <Target className="w-5 h-5 text-cyan-400" />
+                  <p className="text-cyan-400">Will this player score?</p>
                 </div>
 
                 {/* Decision Buttons */}
-                <div className='grid grid-cols-2 gap-4'>
+                <div className="grid grid-cols-2 gap-4">
                   <Button
                     onClick={() => handlePrediction(true)}
-                    className='bg-gradient-to-br from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 text-white py-6 rounded-xl h-auto'
+                    className="bg-gradient-to-br from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 text-white py-6 rounded-xl h-auto"
                   >
-                    <div className='flex flex-col items-center justify-center gap-2 w-full'>
-                      <CheckCircle className='w-6 h-6' />
-                      <span className='text-base font-semibold'>SCORE</span>
+                    <div className="flex flex-col items-center justify-center gap-2 w-full">
+                      <CheckCircle className="w-6 h-6" />
+                      <span className="text-base font-semibold">SCORE</span>
                     </div>
                   </Button>
 
                   <Button
                     onClick={() => handlePrediction(false)}
-                    className='bg-gradient-to-br from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white py-6 rounded-xl h-auto'
+                    className="bg-gradient-to-br from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white py-6 rounded-xl h-auto"
                   >
-                    <div className='flex flex-col items-center justify-center gap-2 w-full'>
-                      <XCircle className='w-6 h-6' />
-                      <span className='text-base font-semibold'>MISS</span>
+                    <div className="flex flex-col items-center justify-center gap-2 w-full">
+                      <XCircle className="w-6 h-6" />
+                      <span className="text-base font-semibold">MISS</span>
                     </div>
                   </Button>
                 </div>
               </div>
             </>
           )}
-          {phase === 'watching' && !showResult && (
-            <div className='flex-1 flex items-center justify-center'>
-              <div className='text-center'>
-                <div className='animate-bounce mb-4 text-6xl'>⚽</div>
-                <p className='text-white text-xl mb-2'>
+          {phase === "watching" && !showResult && (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-bounce mb-4 text-6xl">⚽</div>
+                <p className="text-white text-xl mb-2">
                   {currentPenalty.player} is taking the penalty...
                 </p>
-                <p className='text-gray-400'>
-                  You predicted:{' '}
-                  {currentPenalty.userPrediction ? 'SCORE' : 'MISS'}
+                <p className="text-gray-400">
+                  You predicted:{" "}
+                  {currentPenalty.userPrediction ? "SCORE" : "MISS"}
                 </p>
               </div>
             </div>
           )}
           {showResult && (
-            <div className='flex-1 flex items-center justify-center'>
+            <div className="flex-1 flex items-center justify-center">
               <div
                 className={`text-center p-8 rounded-2xl border-2 ${
-                  currentPenalty.result
-                    ? 'bg-green-900/40 border-green-500'
-                    : 'bg-red-900/40 border-red-500'
+                  currentPenalty.correct
+                    ? "bg-green-900/40 border-green-500"
+                    : "bg-red-900/40 border-red-500"
                 }`}
               >
-                <div className='text-6xl mb-4'>
-                  {currentPenalty.result ? '⚽' : '❌'}
+                <div className="text-6xl mb-4">
+                  {currentPenalty.result ? "⚽" : "❌"}
                 </div>
-                <p className='text-white text-2xl mb-2'>
-                  {currentPenalty.result ? 'GOAL!' : 'SAVED!'}
+                <p className="text-white text-2xl mb-2">
+                  {currentPenalty.result ? "GOAL!" : "SAVED!"}
                 </p>
                 <p
                   className={`text-xl mb-4 ${
-                    currentPenalty.correct ? 'text-green-400' : 'text-red-400'
+                    currentPenalty.correct ? "text-green-400" : "text-red-400"
                   }`}
                 >
                   {currentPenalty.correct
-                    ? '✓ Correct Prediction!'
-                    : '✗ Wrong Prediction'}
+                    ? "✓ Correct Prediction!"
+                    : "✗ Wrong Prediction"}
                 </p>
-                <div className='text-gray-300'>
-                  <p className='text-sm mb-1'>
+                <div className="text-gray-300">
+                  <p className="text-sm mb-1">
                     {currentPenalty.correct
                       ? `Great prediction! Keep it going to win €${(
                           initialStake * PRIZE_MULTIPLIER
                         ).toFixed(2)}`
-                      : 'Game Over - You Lost Your €' +
+                      : "Game Over - You Lost Your €" +
                         initialStake.toFixed(2) +
-                        ' Stake!'}
+                        " Stake!"}
                   </p>
-                  <p className='text-xs text-gray-400'>
+                  <p className="text-xs text-gray-400">
                     {currentPenalty.correct
                       ? `${correctPredictions + 1} correct so far`
-                      : 'One wrong prediction = Instant loss'}
+                      : "One wrong prediction = Instant loss"}
                   </p>
                 </div>
               </div>
             </div>
           )}
-          {phase === 'finished' && (
-            <div className='flex-1 flex items-center justify-center relative overflow-hidden'>
+          {phase === "finished" && (
+            <div className="flex-1 flex items-center justify-center relative overflow-hidden">
               {/* Winning Animation - Only show if won */}
               {!hasLost && (
                 <>
                   {/* Confetti-like elements */}
-                  <div className='absolute inset-0 pointer-events-none'>
+                  <div className="absolute inset-0 pointer-events-none">
                     {[...Array(20)].map((_, i) => (
                       <div
                         key={i}
-                        className='absolute w-3 h-3 rounded-full animate-bounce'
+                        className="absolute w-3 h-3 rounded-full animate-bounce"
                         style={{
                           left: `${Math.random() * 100}%`,
                           top: `-${Math.random() * 20}%`,
                           backgroundColor: [
-                            '#fbbf24',
-                            '#34d399',
-                            '#60a5fa',
-                            '#f472b6',
+                            "#fbbf24",
+                            "#34d399",
+                            "#60a5fa",
+                            "#f472b6",
                           ][i % 4],
                           animationDelay: `${Math.random() * 2}s`,
                           animationDuration: `${2 + Math.random() * 2}s`,
@@ -598,36 +605,36 @@ export function PenaltyShootout({ onBack, onComplete }: PenaltyShootoutProps) {
                     ))}
                   </div>
                   {/* Pulsing glow effect */}
-                  <div className='absolute inset-0 bg-gradient-radial from-green-500/20 via-transparent to-transparent animate-pulse' />
+                  <div className="absolute inset-0 bg-gradient-radial from-green-500/20 via-transparent to-transparent animate-pulse" />
                 </>
               )}
 
-              <div className='text-center p-8 relative z-10'>
-                <div className={!hasLost ? 'animate-bounce' : ''}>
+              <div className="text-center p-8 relative z-10">
+                <div className={!hasLost ? "animate-bounce" : ""}>
                   <Trophy
                     className={`w-20 h-20 mx-auto mb-4 ${
                       !hasLost
-                        ? 'text-yellow-400 drop-shadow-[0_0_15px_rgba(251,191,36,0.8)]'
-                        : 'text-yellow-400'
+                        ? "text-yellow-400 drop-shadow-[0_0_15px_rgba(251,191,36,0.8)]"
+                        : "text-yellow-400"
                     }`}
                   />
                 </div>
-                <p className='text-white text-2xl mb-2'>Shootout Complete!</p>
-                <p className='text-cyan-400 text-xl mb-4'>
+                <p className="text-white text-2xl mb-2">Shootout Complete!</p>
+                <p className="text-cyan-400 text-xl mb-4">
                   {portugalScore > englandScore
-                    ? 'Portugal Wins! 🇵🇹'
+                    ? "Portugal Wins! 🇵🇹"
                     : englandScore > portugalScore
-                    ? 'England Wins! 🏴󠁧󠁢󠁥󠁮󠁧󠁿'
+                    ? "England Wins! 🏴󠁧󠁢󠁥󠁮󠁧󠁿"
                     : "It's a tie!"}
                 </p>
 
                 {/* Winning celebration message */}
                 {!hasLost && (
-                  <div className='mb-4 animate-pulse'>
-                    <p className='text-green-400 text-2xl font-bold mb-2'>
+                  <div className="mb-4 animate-pulse">
+                    <p className="text-green-400 text-2xl font-bold mb-2">
                       🎉 PERFECT PREDICTION! 🎉
                     </p>
-                    <p className='text-yellow-300 text-lg'>
+                    <p className="text-yellow-300 text-lg">
                       You got them all right!
                     </p>
                   </div>
@@ -636,42 +643,42 @@ export function PenaltyShootout({ onBack, onComplete }: PenaltyShootoutProps) {
                 <div
                   className={`rounded-xl p-4 mb-4 ${
                     !hasLost
-                      ? 'bg-gradient-to-br from-green-900/40 to-emerald-900/40 border-2 border-green-500'
-                      : 'bg-[#1a2f4d]'
+                      ? "bg-gradient-to-br from-green-900/40 to-emerald-900/40 border-2 border-green-500"
+                      : "bg-[#1a2f4d]"
                   }`}
                 >
-                  <p className='text-gray-400 text-sm mb-1'>Final Balance</p>
+                  <p className="text-gray-400 text-sm mb-1">Final Balance</p>
                   <p
                     className={`text-3xl font-bold ${
                       hasLost
-                        ? 'text-red-400'
-                        : 'text-green-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.5)]'
+                        ? "text-red-400"
+                        : "text-green-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.5)]"
                     }`}
                   >
                     {currentBalance.toFixed(2)}€
                   </p>
                   {hasLost && (
-                    <p className='text-red-300 text-sm mt-2'>
+                    <p className="text-red-300 text-sm mt-2">
                       Better luck next time!
                     </p>
                   )}
                   {!hasLost && (
-                    <p className='text-green-300 text-sm mt-2'>
+                    <p className="text-green-300 text-sm mt-2">
                       Incredible job! 🏆
                     </p>
                   )}
                 </div>
-                <p className='text-gray-400'>
+                <p className="text-gray-400">
                   {correctPredictions} correct predictions
                 </p>
               </div>
             </div>
           )}
           {/* Penalty History */}
-          {completedPenalties.length > 0 && phase !== 'finished' && (
-            <div className='mt-auto'>
-              <p className='text-gray-400 text-sm mb-2'>Recent Penalties</p>
-              <div className='flex gap-2 overflow-x-auto pb-2'>
+          {completedPenalties.length > 0 && phase !== "finished" && (
+            <div className="mt-auto">
+              <p className="text-gray-400 text-sm mb-2">Recent Penalties</p>
+              <div className="flex gap-2 overflow-x-auto pb-2">
                 {completedPenalties
                   .slice(-5)
                   .reverse()
@@ -680,15 +687,15 @@ export function PenaltyShootout({ onBack, onComplete }: PenaltyShootoutProps) {
                       key={penalty.id}
                       className={`flex-shrink-0 w-16 h-16 rounded-xl border-2 flex flex-col items-center justify-center ${
                         penalty.correct
-                          ? 'bg-green-900/40 border-green-500'
-                          : 'bg-red-900/40 border-red-500'
+                          ? "bg-green-900/40 border-green-500"
+                          : "bg-red-900/40 border-red-500"
                       }`}
                     >
-                      <span className='text-lg'>
-                        {penalty.result ? '⚽' : '❌'}
+                      <span className="text-lg">
+                        {penalty.result ? "⚽" : "❌"}
                       </span>
-                      <span className='text-xs text-gray-400'>
-                        {penalty.team === 'Portugal' ? '🇵🇹' : '�󠁧󠁢󠁥󠁮󠁧󠁿'}
+                      <span className="text-xs text-gray-400">
+                        {penalty.team === "Portugal" ? "🇵🇹" : "🏴󠁧󠁢󠁥󠁮󠁧󠁿"}
                       </span>
                     </div>
                   ))}
