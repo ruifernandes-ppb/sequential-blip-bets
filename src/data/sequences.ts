@@ -53,11 +53,7 @@ export const FRIEND_SEQUENCES: FriendSequence[] = [
   },
   {
     name: "Mike's Streak",
-    outcomes: [
-      'team-scores-goal',
-      'team-wins-corner',
-      'team-scores-free-kick',
-    ],
+    outcomes: ['team-scores-goal', 'team-wins-corner', 'team-scores-free-kick'],
     friendName: 'Mike Johnson',
     friendAvatar: '👨',
     status: 'completed',
@@ -99,11 +95,7 @@ export const FRIEND_SEQUENCES: FriendSequence[] = [
   },
   {
     name: "Lisa's Long Shot",
-    outcomes: [
-      'team-scores-outside-box',
-      'team-hits-post',
-      'team-scores-goal',
-    ],
+    outcomes: ['team-scores-outside-box', 'team-hits-post', 'team-scores-goal'],
     friendName: 'Lisa Wang',
     friendAvatar: '👩‍',
     status: 'completed',

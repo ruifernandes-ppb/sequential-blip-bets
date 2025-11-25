@@ -379,12 +379,12 @@ export function SequenceBuilder({
   };
 
   const MAX_EVENT_ODD = 5;
-  // Calculate difficulty multiplier (lower odds = harder = higher payout)
+  // Calculate difficulty multiplier (higher odds = harder = higher payout)
   // Start with higher base and multiply by inverse of each odd
-  const difficultyMultiplier = selectedOutcomes.reduce(
-    (acc, o) => acc * (MAX_EVENT_ODD / o.odds),
-    1
-  );
+  const difficultyMultiplier = selectedOutcomes.reduce((acc, outcome) => {
+    const cappedOdd = Math.min(outcome.odds, MAX_EVENT_ODD);
+    return acc * cappedOdd;
+  }, 1);
 
   // 2. Calculate bonus multiplier for sequences longer than 3 steps (5% per additional step)
   const lengthBonus =
