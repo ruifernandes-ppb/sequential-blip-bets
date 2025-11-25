@@ -84,14 +84,16 @@ function SortableOutcomeItem({
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center gap-3 bg-[#0f1f3d] rounded-xl p-3 transition-all touch-none ${
+      className={`flex items-center gap-3 bg-[#0f1f3d] rounded-xl p-3 transition-all ${
         isDragging ? 'opacity-50' : 'hover:bg-[#1a2f4d]'
       }`}
-      {...attributes}
-      {...listeners}
     >
       <div className='cursor-move touch-none'>
-        <GripVertical className='w-4 h-4 text-gray-500 flex-shrink-0' />
+        <GripVertical
+          className='w-4 h-4 text-gray-500 flex-shrink-0 touch-none'
+          {...attributes}
+          {...listeners}
+        />
       </div>
       <div className='flex items-center justify-center w-8 h-8 rounded-full bg-cyan-500/20 text-cyan-400 flex-shrink-0 text-sm'>
         {index + 1}

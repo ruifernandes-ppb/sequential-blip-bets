@@ -25,19 +25,15 @@ export const POPULAR_SEQUENCES: PopularSequence[] = [
     name: 'Corner to Goal',
     outcomes: [
       'team-wins-corner',
-      'player-shot-on-target',
-      'player-scores-goal',
+      'team-creates-big-chance',
+      'team-scores-goal',
     ],
     bettors: 1654,
     winRate: 65,
   },
   {
     name: 'Attacking Masterclass',
-    outcomes: [
-      'player-gives-assist',
-      'player-scores-goal',
-      'player-shot-on-target',
-    ],
+    outcomes: ['team-scores-goal', 'team-wins-corner', 'team-scores-free-kick'],
     bettors: 1876,
     winRate: 70,
   },
@@ -58,9 +54,9 @@ export const FRIEND_SEQUENCES: FriendSequence[] = [
   {
     name: "Mike's Streak",
     outcomes: [
-      'player-shot-on-target',
-      'player-scores-goal',
-      'player-gives-assist',
+      'team-scores-goal',
+      'team-wins-corner',
+      'team-scores-free-kick',
     ],
     friendName: 'Mike Johnson',
     friendAvatar: '👨',
@@ -72,7 +68,7 @@ export const FRIEND_SEQUENCES: FriendSequence[] = [
     outcomes: [
       'team-scores-free-kick',
       'team-receives-yellow',
-      'player-scores-goal',
+      'team-scores-goal',
     ],
     friendName: 'Alex Kim',
     friendAvatar: '🧑',
@@ -81,8 +77,8 @@ export const FRIEND_SEQUENCES: FriendSequence[] = [
   {
     name: "Emma's Risk",
     outcomes: [
-      'player-wins-penalty',
-      'player-misses-penalty',
+      'team-wins-penalty',
+      'team-misses-penalty',
       'team-concedes-corner',
     ],
     friendName: 'Emma Davis',
@@ -93,9 +89,9 @@ export const FRIEND_SEQUENCES: FriendSequence[] = [
   {
     name: "David's Defense",
     outcomes: [
-      'player-intercepts-attack',
-      'goalkeeper-makes-save',
-      'player-tackles-in-box',
+      'team-concedes-penalty',
+      'team-commits-foul',
+      'team-concedes-corner',
     ],
     friendName: 'David Martinez',
     friendAvatar: '👨‍🦱',
@@ -104,7 +100,7 @@ export const FRIEND_SEQUENCES: FriendSequence[] = [
   {
     name: "Lisa's Long Shot",
     outcomes: [
-      'player-scores-outside-box',
+      'team-scores-outside-box',
       'team-hits-post',
       'team-scores-goal',
     ],
