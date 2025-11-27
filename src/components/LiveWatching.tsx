@@ -340,7 +340,7 @@ export function LiveWatching({
         <div className='flex-1'>
           <h1 className='text-white'>Live Timeline</h1>
           <p className='text-gray-400 text-sm'>
-            {match.player1} vs {match.player2} • Set {match.currentSet}
+            {match.player1} vs {match.player2}
           </p>
         </div>
         <div className='flex items-center gap-3'>

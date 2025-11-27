@@ -271,6 +271,34 @@ export function SequenceBuilder({
     const searchLower = chatInput.toLowerCase();
     const keywords = searchLower.split(' ').filter((word) => word.length > 2);
 
+    // Create expanded templates inline for searching
+    const expandedTemplates = OUTCOME_TEMPLATES.flatMap((template) => {
+      if (
+        template.category === 'team-goals' ||
+        template.category === 'team-fouls'
+      ) {
+        return [
+          {
+            ...template,
+            id: `${template.id}-player1`,
+            description: template.description.replace(
+              '{playerName}',
+              match.player1
+            ),
+          },
+          {
+            ...template,
+            id: `${template.id}-player2`,
+            description: template.description.replace(
+              '{playerName}',
+              match.player2
+            ),
+          },
+        ];
+      }
+      return [template];
+    });
+
     const scoredTemplates = expandedTemplates.map((template) => {
       let score = 0;
       const descLower = template.description.toLowerCase();
@@ -395,21 +423,23 @@ export function SequenceBuilder({
 
   const MAX_EVENT_ODD = 5;
   // Calculate difficulty multiplier (higher odds = harder = higher payout)
-  // Start with higher base and multiply by inverse of each odd
+  // Multiply odds together but apply a dampening factor to prevent exponential growth
   const difficultyMultiplier = selectedOutcomes.reduce((acc, outcome) => {
     const cappedOdd = Math.min(outcome.odds, MAX_EVENT_ODD);
     return acc * cappedOdd;
   }, 1);
 
-  // 2. Calculate bonus multiplier for sequences longer than 3 steps (5% per additional step)
-  const lengthBonus =
-    selectedOutcomes.length > 3 ? 0.05 * (selectedOutcomes.length - 3) : 0;
-
-  // 3. Calculate potential payout: stake * difficulty multiplier * (1 + bonus)
-  const potentialGains =
-    selectedOutcomes.length >= 3
-      ? (initialStake * difficultyMultiplier * (1 + lengthBonus)) / 2
+  // 2. Calculate bonus based on initial stake (5% of stake per additional step after 3)
+  const stakeLengthBonus =
+    selectedOutcomes.length > 3
+      ? initialStake * 0.05 * (selectedOutcomes.length - 3)
       : 0;
+
+  // 3. Calculate potential payout with dampening to control excessive gains
+  // Apply square root to dampen exponential growth, then add stake-based length bonus
+  const basePayout = Math.sqrt(difficultyMultiplier) * initialStake;
+  const potentialGains =
+    selectedOutcomes.length >= 3 ? basePayout + stakeLengthBonus : 0;
 
   return (
     <div className='min-h-screen flex flex-col p-4 max-w-md mx-auto pb-28'>
