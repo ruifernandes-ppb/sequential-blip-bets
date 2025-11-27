@@ -22,6 +22,7 @@ export type GameScreen =
 
 export interface Match {
   id: number | string;
+  date: string; // ISO date string
   player1: string;
   player2: string;
   player1Sets: number;

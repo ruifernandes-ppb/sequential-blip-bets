@@ -15,6 +15,7 @@ export interface TeamLineup {
 
 export interface MatchLineup {
   matchId: string;
+  date?: string; // ISO date string
   team1: TeamLineup;
   team2: TeamLineup;
 }
@@ -805,6 +806,503 @@ export const CZECHIA_DENMARK_2004: MatchLineup = {
   },
 };
 
+// Chelsea vs Arsenal - 30 Nov 2025, 16:30
+export const CHELSEA_ARSENAL_2025: MatchLineup = {
+  matchId: 'chelsea-arsenal-2025',
+  team1: {
+    teamName: 'Chelsea',
+    players: [
+      {
+        id: 'che-1',
+        name: 'R. Sanchez',
+        number: 1,
+        position: 'GK',
+        oddsModifier: 2.5,
+      },
+      {
+        id: 'che-27',
+        name: 'M. Gusto',
+        number: 27,
+        position: 'DEF',
+        oddsModifier: 2.0,
+      },
+      {
+        id: 'che-29',
+        name: 'W. Fofana',
+        number: 29,
+        position: 'DEF',
+        oddsModifier: 2.0,
+      },
+      {
+        id: 'che-23',
+        name: 'T. Chalobah',
+        number: 23,
+        position: 'DEF',
+        oddsModifier: 2.0,
+      },
+      {
+        id: 'che-3',
+        name: 'M. Cucurella',
+        number: 3,
+        position: 'DEF',
+        oddsModifier: 1.9,
+      },
+      {
+        id: 'che-24',
+        name: 'R. James',
+        number: 24,
+        position: 'DEF',
+        isCaptain: true,
+        oddsModifier: 1.9,
+      },
+      {
+        id: 'che-25',
+        name: 'M. Caicedo',
+        number: 25,
+        position: 'MID',
+        oddsModifier: 1.5,
+      },
+      {
+        id: 'che-41',
+        name: 'Estêvão',
+        number: 41,
+        position: 'MID',
+        oddsModifier: 1.3,
+      },
+      {
+        id: 'che-8',
+        name: 'E. Fernández',
+        number: 8,
+        position: 'MID',
+        oddsModifier: 1.4,
+      },
+      {
+        id: 'che-49',
+        name: 'A. Garnacho',
+        number: 49,
+        position: 'FWD',
+        oddsModifier: 1.1,
+      },
+      {
+        id: 'che-7',
+        name: 'P. Neto',
+        number: 7,
+        position: 'FWD',
+        oddsModifier: 1.2,
+      },
+      {
+        id: 'che-12',
+        name: 'F. Jorgensen',
+        number: 12,
+        position: 'GK',
+        oddsModifier: 2.5,
+      },
+      {
+        id: 'che-4',
+        name: 'T. Adarabioyo',
+        number: 4,
+        position: 'DEF',
+        oddsModifier: 2.0,
+      },
+      {
+        id: 'che-5',
+        name: 'B. Badiashile',
+        number: 5,
+        position: 'DEF',
+        oddsModifier: 2.0,
+      },
+      {
+        id: 'che-9',
+        name: 'L. Delap',
+        number: 9,
+        position: 'FWD',
+        oddsModifier: 1.2,
+      },
+      {
+        id: 'che-11',
+        name: 'J. Gittens',
+        number: 11,
+        position: 'FWD',
+        oddsModifier: 1.2,
+      },
+      {
+        id: 'che-17',
+        name: 'A. Nascimento',
+        number: 17,
+        position: 'MID',
+        oddsModifier: 1.4,
+      },
+      {
+        id: 'che-20',
+        name: 'J. Pedro',
+        number: 20,
+        position: 'FWD',
+        oddsModifier: 1.2,
+      },
+      {
+        id: 'che-21',
+        name: 'J. Hato',
+        number: 21,
+        position: 'DEF',
+        oddsModifier: 2.0,
+      },
+      {
+        id: 'che-32',
+        name: 'T. George',
+        number: 32,
+        position: 'MID',
+        oddsModifier: 1.4,
+      },
+      {
+        id: 'che-34',
+        name: 'J. Acheampong',
+        number: 34,
+        position: 'DEF',
+        oddsModifier: 2.0,
+      },
+      {
+        id: 'che-38',
+        name: 'M. Guiu',
+        number: 38,
+        position: 'FWD',
+        oddsModifier: 1.3,
+      },
+      {
+        id: 'che-40',
+        name: 'F. Buonanotte',
+        number: 40,
+        position: 'MID',
+        oddsModifier: 1.4,
+      },
+    ],
+  },
+  team2: {
+    teamName: 'Arsenal',
+    players: [
+      {
+        id: 'ars-1',
+        name: 'D. Raya',
+        number: 1,
+        position: 'GK',
+        oddsModifier: 2.5,
+      },
+      {
+        id: 'ars-12',
+        name: 'J. Timber',
+        number: 12,
+        position: 'DEF',
+        oddsModifier: 2.0,
+      },
+      {
+        id: 'ars-2',
+        name: 'W. Saliba',
+        number: 2,
+        position: 'DEF',
+        oddsModifier: 2.0,
+      },
+      {
+        id: 'ars-3',
+        name: 'C. Mosquera',
+        number: 3,
+        position: 'DEF',
+        oddsModifier: 2.0,
+      },
+      {
+        id: 'ars-49',
+        name: 'M. Lewis-Skelly',
+        number: 49,
+        position: 'DEF',
+        oddsModifier: 2.0,
+      },
+      {
+        id: 'ars-10',
+        name: 'E. Eze',
+        number: 10,
+        position: 'MID',
+        oddsModifier: 1.3,
+      },
+      {
+        id: 'ars-36',
+        name: 'M. Zubimendi',
+        number: 36,
+        position: 'MID',
+        oddsModifier: 1.5,
+      },
+      {
+        id: 'ars-41',
+        name: 'D. Rice',
+        number: 41,
+        position: 'MID',
+        oddsModifier: 1.4,
+      },
+      {
+        id: 'ars-7',
+        name: 'B. Saka',
+        number: 7,
+        position: 'FWD',
+        isCaptain: true,
+        oddsModifier: 1.0,
+      },
+      {
+        id: 'ars-23',
+        name: 'M. Merino',
+        number: 23,
+        position: 'MID',
+        oddsModifier: 1.3,
+      },
+      {
+        id: 'ars-19',
+        name: 'L. Trossard',
+        number: 19,
+        position: 'FWD',
+        oddsModifier: 1.1,
+      },
+      {
+        id: 'ars-13',
+        name: 'K. Arrizabalaga',
+        number: 13,
+        position: 'GK',
+        oddsModifier: 2.5,
+      },
+      {
+        id: 'ars-35',
+        name: 'T. Setford',
+        number: 35,
+        position: 'GK',
+        oddsModifier: 2.5,
+      },
+      {
+        id: 'ars-4',
+        name: 'B. White',
+        number: 4,
+        position: 'DEF',
+        oddsModifier: 2.0,
+      },
+      {
+        id: 'ars-5',
+        name: 'P. Hincapié',
+        number: 5,
+        position: 'DEF',
+        oddsModifier: 2.0,
+      },
+      {
+        id: 'ars-8',
+        name: 'M. Ødegaard',
+        number: 8,
+        position: 'MID',
+        oddsModifier: 1.2,
+      },
+      {
+        id: 'ars-11',
+        name: 'G. Martinelli',
+        number: 11,
+        position: 'FWD',
+        oddsModifier: 1.1,
+      },
+      {
+        id: 'ars-16',
+        name: 'C. Norgaard',
+        number: 16,
+        position: 'MID',
+        oddsModifier: 1.5,
+      },
+      {
+        id: 'ars-20',
+        name: 'N. Madueke',
+        number: 20,
+        position: 'FWD',
+        oddsModifier: 1.2,
+      },
+      {
+        id: 'ars-22',
+        name: 'E. Nwaneri',
+        number: 22,
+        position: 'MID',
+        oddsModifier: 1.4,
+      },
+      {
+        id: 'ars-33',
+        name: 'R. Calafiori',
+        number: 33,
+        position: 'DEF',
+        oddsModifier: 2.0,
+      },
+    ],
+  },
+};
+
+// Manchester City vs Leeds United - 2025
+export const MANCHESTER_CITY_LEEDS_2025: MatchLineup = {
+  matchId: 'manchester-city-leeds-2025',
+  date: '2025-11-29T15:00:00',
+  team1: {
+    teamName: 'Manchester City',
+    players: [
+      {
+        id: 'mci-1',
+        name: 'J. Trafford',
+        number: 1,
+        position: 'GK',
+        oddsModifier: 2.5,
+      },
+      {
+        id: 'mci-45',
+        name: 'A. Husanov',
+        number: 45,
+        position: 'DEF',
+        oddsModifier: 2.0,
+      },
+      {
+        id: 'mci-5',
+        name: 'J. Stones',
+        number: 5,
+        position: 'DEF',
+        isCaptain: true,
+        oddsModifier: 2.0,
+      },
+      {
+        id: 'mci-6',
+        name: 'N. Aké',
+        number: 6,
+        position: 'DEF',
+        oddsModifier: 2.0,
+      },
+      {
+        id: 'mci-21',
+        name: 'R. Ait Nouri',
+        number: 21,
+        position: 'DEF',
+        oddsModifier: 1.9,
+      },
+      {
+        id: 'mci-82',
+        name: 'R. Lewis',
+        number: 82,
+        position: 'MID',
+        oddsModifier: 1.5,
+      },
+      {
+        id: 'mci-14',
+        name: 'N. Gonzalez Iglesias',
+        number: 14,
+        position: 'MID',
+        oddsModifier: 1.4,
+      },
+      {
+        id: 'mci-4',
+        name: 'T. Reijnders',
+        number: 4,
+        position: 'MID',
+        oddsModifier: 1.4,
+      },
+      {
+        id: 'mci-52',
+        name: 'O. Bobb',
+        number: 52,
+        position: 'FWD',
+        oddsModifier: 1.3,
+      },
+      {
+        id: 'mci-7',
+        name: 'O. Marmoush',
+        number: 7,
+        position: 'FWD',
+        oddsModifier: 1.1,
+      },
+      {
+        id: 'mci-26',
+        name: 'Savinho',
+        number: 26,
+        position: 'FWD',
+        oddsModifier: 1.2,
+      },
+    ],
+  },
+  team2: {
+    teamName: 'Leeds United',
+    players: [
+      {
+        id: 'lee-1',
+        name: 'L. Perri',
+        number: 1,
+        position: 'GK',
+        oddsModifier: 2.5,
+      },
+      {
+        id: 'lee-2',
+        name: 'J. Bogle',
+        number: 2,
+        position: 'DEF',
+        oddsModifier: 2.0,
+      },
+      {
+        id: 'lee-6',
+        name: 'J. Rodon',
+        number: 6,
+        position: 'DEF',
+        oddsModifier: 2.0,
+      },
+      {
+        id: 'lee-5',
+        name: 'P. Struijk',
+        number: 5,
+        position: 'DEF',
+        oddsModifier: 2.0,
+      },
+      {
+        id: 'lee-3',
+        name: 'G. Gudmundsson',
+        number: 3,
+        position: 'DEF',
+        oddsModifier: 1.9,
+      },
+      {
+        id: 'lee-8',
+        name: 'S. Longstaff',
+        number: 8,
+        position: 'MID',
+        oddsModifier: 1.4,
+      },
+      {
+        id: 'lee-4',
+        name: 'E. Ampadu',
+        number: 4,
+        position: 'MID',
+        isCaptain: true,
+        oddsModifier: 1.5,
+      },
+      {
+        id: 'lee-18',
+        name: 'A. Stach',
+        number: 18,
+        position: 'MID',
+        oddsModifier: 1.4,
+      },
+      {
+        id: 'lee-11',
+        name: 'B. Aaronson',
+        number: 11,
+        position: 'MID',
+        oddsModifier: 1.3,
+      },
+      {
+        id: 'lee-14',
+        name: 'L. Nmecha',
+        number: 14,
+        position: 'FWD',
+        oddsModifier: 1.1,
+      },
+      {
+        id: 'lee-19',
+        name: 'N. Okafor',
+        number: 19,
+        position: 'FWD',
+        oddsModifier: 1.2,
+      },
+    ],
+  },
+};
+
 // Generic opponent squad template
 export const GENERIC_OPPONENT: TeamLineup = {
   teamName: 'Opponent',
@@ -906,6 +1404,10 @@ export function getMatchPlayers(
     lineup = SWEDEN_NETHERLANDS_2004;
   } else if (matchId === 'czechia-denmark-2004') {
     lineup = CZECHIA_DENMARK_2004;
+  } else if (matchId === 'chelsea-arsenal-2025') {
+    lineup = CHELSEA_ARSENAL_2025;
+  } else if (matchId === 'manchester-city-leeds-2025') {
+    lineup = MANCHESTER_CITY_LEEDS_2025;
   }
 
   // If we have a specific lineup, use it

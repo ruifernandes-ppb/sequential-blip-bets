@@ -38,6 +38,7 @@
     "embla-carousel-react": "^8.6.0",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.487.0",
+    "msw": "^2.12.3",
     "next-themes": "^0.4.6",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
@@ -62,5 +63,10 @@
     "build": "vite build",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
   }
 }

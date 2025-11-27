@@ -51,7 +51,7 @@ export function LiveWatching({
     useState<OutcomeTemplate | null>(null);
   const [successfulRuns, setSuccessfulRuns] = useState(0);
   const [failedRuns, setFailedRuns] = useState(0);
-  const [gameTimeRemaining, setGameTimeRemaining] = useState(180); // 3 minutes = 180 seconds
+  const [gameTimeRemaining, setGameTimeRemaining] = useState(180);
 
   const recordSequenceAttempt = useBetStore(
     (state) => state.recordSequenceAttempt
@@ -61,28 +61,27 @@ export function LiveWatching({
   const CORRECT_PENALTY_MULTIPLIER = 1; // Keep 100% of winnings
   const WRONG_ANSWER_PENALTY = 0.85; // Keep 85% of winnings
 
-  useEffect(() => {
-    // Start processing outcomes after a brief delay
-    const startTimer = setTimeout(() => {
-      processNextOutcome();
-    }, 2000);
+  // useEffect(() => {
+  //   // Start processing outcomes after a brief delay
+  //   const startTimer = setTimeout(() => {
+  //     processNextOutcome();
+  //   }, 2000);
 
-    return () => clearTimeout(startTimer);
-  }, []);
+  //   return () => clearTimeout(startTimer);
+  // }, []);
 
   useEffect(() => {
     // Game timer countdown
-    const gameTimer = setInterval(() => {
-      setGameTimeRemaining((prev) => {
-        if (prev <= 1) {
-          clearInterval(gameTimer);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(gameTimer);
+    // const gameTimer = setInterval(() => {
+    //   setGameTimeRemaining((prev) => {
+    //     if (prev <= 1) {
+    //       clearInterval(gameTimer);
+    //       return 0;
+    //     }
+    //     return prev - 1;
+    //   });
+    // }, 1000);
+    // return () => clearInterval(gameTimer);
   }, []);
 
   // Separate effect to handle game end
@@ -349,8 +348,16 @@ export function LiveWatching({
             <div className='flex items-center gap-1.5'>
               <Clock className='w-4 h-4 text-orange-400' />
               <span className='text-orange-400 text-sm font-bold'>
-                {Math.floor(gameTimeRemaining / 60)}:
-                {String(gameTimeRemaining % 60).padStart(2, '0')}
+                {(() => {
+                  const targetDate = new Date(match.date);
+                  const now = new Date();
+                  const diffMs = targetDate.getTime() - now.getTime();
+                  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                  const hours = Math.floor(
+                    (diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+                  );
+                  return diffMs > 0 ? `${days}d ${hours}h` : 'Started';
+                })()}
               </span>
             </div>
           </div>
@@ -430,7 +437,7 @@ export function LiveWatching({
                   flex items-center gap-3 rounded-xl p-4 transition-all
                   ${
                     isPending
-                      ? 'bg-[#1a2f4d] border border-gray-600 cursor-move hover:bg-[#243a5c]'
+                      ? 'bg-[#1a2f4d] border border-gray-600 hover:bg-[#243a5c]'
                       : ''
                   }
                   ${

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   ArrowLeft,
   Plus,
@@ -129,6 +129,21 @@ export function SequenceBuilder({
   const [suggestionTab, setSuggestionTab] = useState<'popular' | 'friends'>(
     'popular'
   );
+
+  // Fetch players from API (for network activity demo)
+  useEffect(() => {
+    const fetchPlayers = async () => {
+      try {
+        const response = await fetch(`/api/players/${match.id}`);
+        const data = await response.json();
+        console.log('Fetched players for match:', data);
+      } catch (error) {
+        console.error('Error fetching players:', error);
+      }
+    };
+
+    fetchPlayers();
+  }, [match.id]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {}),
@@ -393,7 +408,7 @@ export function SequenceBuilder({
   // 3. Calculate potential payout: stake * difficulty multiplier * (1 + bonus)
   const potentialGains =
     selectedOutcomes.length >= 3
-      ? initialStake * difficultyMultiplier * (1 + lengthBonus)
+      ? (initialStake * difficultyMultiplier * (1 + lengthBonus)) / 2
       : 0;
 
   return (

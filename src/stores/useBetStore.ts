@@ -38,62 +38,63 @@ interface BetStore {
 }
 
 export const useBetStore = create<BetStore>()(
-  // persist(
-  (set) => ({
-    placedBets: [],
-    sequenceStats: {
-      totalSequences: 0,
-      successfulSequences: 0,
-      failedSequences: 0,
-      totalEarnings: 0,
-      totalSpent: 0,
-    },
+  persist(
+    (set) => ({
+      placedBets: [],
+      sequenceStats: {
+        totalSequences: 0,
+        successfulSequences: 0,
+        failedSequences: 0,
+        totalEarnings: 0,
+        totalSpent: 0,
+      },
 
-    addBet: (bet) =>
-      set((state) => ({
-        placedBets: [...state.placedBets, bet],
-      })),
+      addBet: (bet) =>
+        set((state) => ({
+          placedBets: [...state.placedBets, bet],
+        })),
 
-    updateBet: (betId, updates) =>
-      set((state) => ({
-        placedBets: state.placedBets.map((bet) =>
-          bet.id === betId ? { ...bet, ...updates } : bet
-        ),
-      })),
+      updateBet: (betId, updates) =>
+        set((state) => ({
+          placedBets: state.placedBets.map((bet) =>
+            bet.id === betId ? { ...bet, ...updates } : bet
+          ),
+        })),
 
-    removeBet: (betId) =>
-      set((state) => ({
-        placedBets: state.placedBets.filter((bet) => bet.id !== betId),
-      })),
+      removeBet: (betId) =>
+        set((state) => ({
+          placedBets: state.placedBets.filter((bet) => bet.id !== betId),
+        })),
 
-    clearBets: () => set({ placedBets: [] }),
+      clearBets: () => set({ placedBets: [] }),
 
-    recordSequenceAttempt: (success, earnings, stake) =>
-      set((state) => ({
-        sequenceStats: {
-          totalSequences: state.sequenceStats.totalSequences + 1,
-          successfulSequences:
-            state.sequenceStats.successfulSequences + (success ? 1 : 0),
-          failedSequences:
-            state.sequenceStats.failedSequences + (success ? 0 : 1),
-          totalEarnings: state.sequenceStats.totalEarnings + (earnings - stake),
-          totalSpent: state.sequenceStats.totalSpent + stake,
-        },
-      })),
+      recordSequenceAttempt: (success, earnings, stake) =>
+        set((state) => ({
+          sequenceStats: {
+            totalSequences: state.sequenceStats.totalSequences + 1,
+            successfulSequences:
+              state.sequenceStats.successfulSequences + (success ? 1 : 0),
+            failedSequences:
+              state.sequenceStats.failedSequences + (success ? 0 : 1),
+            totalEarnings:
+              state.sequenceStats.totalEarnings + (earnings - stake),
+            totalSpent: state.sequenceStats.totalSpent + stake,
+          },
+        })),
 
-    resetStats: () =>
-      set({
-        sequenceStats: {
-          totalSequences: 0,
-          successfulSequences: 0,
-          failedSequences: 0,
-          totalEarnings: 0,
-          totalSpent: 0,
-        },
-      }),
-  })
-  // {
-  //   name: 'bet-storage', // localStorage key
-  // }
-  // )
+      resetStats: () =>
+        set({
+          sequenceStats: {
+            totalSequences: 0,
+            successfulSequences: 0,
+            failedSequences: 0,
+            totalEarnings: 0,
+            totalSpent: 0,
+          },
+        }),
+    }),
+    {
+      name: 'bet-storage', // localStorage key
+    }
+  )
 );

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import {
   Trophy,
   Clock,
@@ -18,42 +19,45 @@ interface EventSelectionProps {
   onViewMyBets?: () => void;
 }
 
-const LIVE_MATCHES: Match[] = [
-  {
-    id: 'portugal-england-2004',
-    player1: 'Portugal',
-    player2: 'England',
-    player1Sets: 0,
-    player2Sets: 0,
-    player1Games: 0,
-    player2Games: 0,
-    player1Points: '0',
-    player2Points: '0',
-    currentSet: 1,
-    tournament: 'UEFA Euro 2004',
-    isLive: true,
-  },
-  {
-    id: 'france-greece-2004',
-    player1: 'France',
-    player2: 'Greece',
-    player1Sets: 0,
-    player2Sets: 0,
-    player1Games: 0,
-    player2Games: 0,
-    player1Points: '0',
-    player2Points: '0',
-    currentSet: 2,
-    tournament: 'UEFA Euro 2004',
-    isLive: true,
-  },
-];
+// const LIVE_MATCHES: Match[] = [
+//   {
+//     id: 'portugal-england-2004',
+//     player1: 'Portugal',
+//     player2: 'England',
+//     player1Sets: 0,
+//     player2Sets: 0,
+//     player1Games: 0,
+//     player2Games: 0,
+//     player1Points: '0',
+//     player2Points: '0',
+//     currentSet: 1,
+//     tournament: 'UEFA Euro 2004',
+//     isLive: true,
+//   },
+//   {
+//     id: 'france-greece-2004',
+//     player1: 'France',
+//     player2: 'Greece',
+//     player1Sets: 0,
+//     player2Sets: 0,
+//     player1Games: 0,
+//     player2Games: 0,
+//     player1Points: '0',
+//     player2Points: '0',
+//     currentSet: 2,
+//     tournament: 'UEFA Euro 2004',
+//     isLive: true,
+//   },
+// ];
+
+const LIVE_MATCHES: Match[] = [];
 
 const UPCOMING_MATCHES: Match[] = [
   {
-    id: 'sweden-netherlands-2004',
-    player1: 'Sweden',
-    player2: 'Netherlands',
+    id: 'chelsea-arsenal-2025',
+    date: '2025-11-30T16:30:00Z',
+    player1: 'Chelsea',
+    player2: 'Arsenal',
     player1Sets: 0,
     player2Sets: 0,
     player1Games: 0,
@@ -61,13 +65,14 @@ const UPCOMING_MATCHES: Match[] = [
     player1Points: '0',
     player2Points: '0',
     currentSet: 0,
-    tournament: 'UEFA Nations League',
+    tournament: 'English Premier League',
     isLive: false,
   },
   {
-    id: 'czechia-denmark-2004',
-    player1: 'Czech Republic',
-    player2: 'Denmark',
+    id: 'manchester-city-leeds-2025',
+    date: '2025-12-01T15:00:00Z',
+    player1: 'Manchester City',
+    player2: 'Leeds United',
     player1Sets: 0,
     player2Sets: 0,
     player1Games: 0,
@@ -75,7 +80,7 @@ const UPCOMING_MATCHES: Match[] = [
     player1Points: '0',
     player2Points: '0',
     currentSet: 0,
-    tournament: 'International Friendly',
+    tournament: 'English Premier League',
     isLive: false,
   },
 ];
@@ -91,6 +96,21 @@ export function EventSelection({
     (bet) => bet.status === 'pending' || bet.status === 'live'
   ).length;
 
+  // Fetch matches from API (for network activity demo)
+  useEffect(() => {
+    const fetchMatches = async () => {
+      try {
+        const response = await fetch('/api/matches');
+        const data = await response.json();
+        console.log('Fetched matches:', data);
+      } catch (error) {
+        console.error('Error fetching matches:', error);
+      }
+    };
+
+    fetchMatches();
+  }, []);
+
   return (
     <div className='min-h-screen flex flex-col p-4 max-w-md mx-auto'>
       {/* Header */}
@@ -104,7 +124,7 @@ export function EventSelection({
       </div>
 
       {/* Penalty Shootout Special */}
-      {onPenaltyShootout && placedBets.length > 0 && (
+      {false && (
         <div className='mb-6'>
           <button
             onClick={onPenaltyShootout}
@@ -187,15 +207,17 @@ export function EventSelection({
       )}
 
       {/* Live Badge */}
-      <div className='flex items-center gap-2 mb-4'>
-        <div className='flex items-center gap-2 bg-red-500 px-3 py-1 rounded-full'>
-          <div className='w-2 h-2 bg-white rounded-full animate-pulse' />
-          <span className='text-white text-sm'>LIVE NOW</span>
+      {LIVE_MATCHES.length > 0 && (
+        <div className='flex items-center gap-2 mb-4'>
+          <div className='flex items-center gap-2 bg-red-500 px-3 py-1 rounded-full'>
+            <div className='w-2 h-2 bg-white rounded-full animate-pulse' />
+            <span className='text-white text-sm'>LIVE NOW</span>
+          </div>
+          <span className='text-gray-400 text-sm'>
+            {LIVE_MATCHES.length} matches
+          </span>
         </div>
-        <span className='text-gray-400 text-sm'>
-          {LIVE_MATCHES.length} matches
-        </span>
-      </div>
+      )}
 
       {/* Live Matches List */}
       <div className='space-y-3 mb-8'>
@@ -250,39 +272,55 @@ export function EventSelection({
 
       {/* Upcoming Matches List */}
       <div className='space-y-3 flex-1'>
-        {UPCOMING_MATCHES.map((match) => (
-          <button
-            key={match.id}
-            onClick={() => onMatchSelect(match)}
-            className='w-full bg-gradient-to-br from-[#1a2f4d] to-[#0f1f3d] rounded-2xl p-4 border border-cyan-500/30 hover:border-cyan-500/60 transition-all active:scale-[0.98]'
-          >
-            {/* League */}
-            <div className='flex items-center justify-between mb-3'>
-              <span className='text-gray-400 text-xs'>{match.tournament}</span>
-              <div className='flex items-center gap-1 text-cyan-400'>
-                <Clock className='w-3 h-3' />
-                <span className='text-xs'>Coming soon</span>
-              </div>
-            </div>
+        {UPCOMING_MATCHES.map((match) => {
+          const matchDate = new Date(match.date);
+          const formattedDate = matchDate.toLocaleDateString('en-GB', {
+            day: 'numeric',
+            month: 'short',
+          });
+          const formattedTime = matchDate.toLocaleTimeString('en-GB', {
+            hour: '2-digit',
+            minute: '2-digit',
+          });
 
-            {/* Teams */}
-            <div className='flex items-center justify-between mb-3'>
-              <div className='flex-1 text-left'>
-                <p className='text-white mb-1'>{match.player1}</p>
-                <p className='text-white'>{match.player2}</p>
+          return (
+            <button
+              key={match.id}
+              onClick={() => onMatchSelect(match)}
+              className='w-full bg-gradient-to-br from-[#1a2f4d] to-[#0f1f3d] rounded-2xl p-4 border border-cyan-500/30 hover:border-cyan-500/60 transition-all active:scale-[0.98]'
+            >
+              {/* League */}
+              <div className='flex items-center justify-between mb-3'>
+                <span className='text-gray-400 text-xs'>
+                  {match.tournament}
+                </span>
+                <div className='flex items-center gap-1 text-cyan-400'>
+                  <Clock className='w-3 h-3' />
+                  <span className='text-xs'>
+                    {formattedDate} • {formattedTime}
+                  </span>
+                </div>
               </div>
-              <div className='flex flex-col items-center mx-4'>
-                <span className='text-gray-500 text-sm'>vs</span>
-              </div>
-              <ArrowRight className='w-5 h-5 text-cyan-400' />
-            </div>
 
-            {/* CTA */}
-            <div className='flex items-center justify-center gap-2 pt-2 border-t border-gray-700'>
-              <span className='text-cyan-400 text-sm'>Prepare sequence</span>
-            </div>
-          </button>
-        ))}
+              {/* Teams */}
+              <div className='flex items-center justify-between mb-3'>
+                <div className='flex-1 text-left'>
+                  <p className='text-white mb-1'>{match.player1}</p>
+                  <p className='text-white'>{match.player2}</p>
+                </div>
+                <div className='flex flex-col items-center mx-4'>
+                  <span className='text-gray-500 text-sm'>vs</span>
+                </div>
+                <ArrowRight className='w-5 h-5 text-cyan-400' />
+              </div>
+
+              {/* CTA */}
+              <div className='flex items-center justify-center gap-2 pt-2 border-t border-gray-700'>
+                <span className='text-cyan-400 text-sm'>Prepare sequence</span>
+              </div>
+            </button>
+          );
+        })}
       </div>
 
       {/* Info Footer */}
